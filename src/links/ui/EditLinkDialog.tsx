@@ -43,7 +43,7 @@ export function EditLinkDialog({
     slug?: string;
     submit?: string;
   }>({});
-  const [host, setHost] = React.useState("relay.vercel.app");
+  const [host, setHost] = React.useState("withrelay.vercel.app");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
 

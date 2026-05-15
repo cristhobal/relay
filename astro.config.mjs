@@ -8,7 +8,7 @@ import vercel from "@astrojs/vercel";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://relay.vercel.app",
+  site: "https://withrelay.vercel.app",
   output: "server",
   adapter: vercel(),
   integrations: [react(), auth()],

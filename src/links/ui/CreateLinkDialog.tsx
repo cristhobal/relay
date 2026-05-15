@@ -51,7 +51,7 @@ export function CreateLinkDialog({
     submit?: string;
   }>({});
   const [submitting, setSubmitting] = React.useState(false);
-  const [host, setHost] = React.useState("relay.vercel.app");
+  const [host, setHost] = React.useState("withrelay.vercel.app");
   const [anonymousCount, setAnonymousCount] = React.useState(0);
 
   React.useEffect(() => {

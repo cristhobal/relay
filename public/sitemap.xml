@@ -3,7 +3,7 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <!--
-    sitemap.xml — relay (https://relay.vercel.app)
+    sitemap.xml — relay (https://withrelay.vercel.app)
     Generated: 2026-05-04
 
     Only the public, indexable page is listed here.
@@ -14,7 +14,7 @@
   -->
 
   <url>
-    <loc>https://relay.vercel.app/</loc>
+    <loc>https://withrelay.vercel.app/</loc>
     <lastmod>2026-05-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>

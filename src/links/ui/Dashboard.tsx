@@ -398,7 +398,7 @@ const LinksTab = React.memo(function LinksTab({
 }) {
   const [query, setQuery] = React.useState("");
   const [sort, setSort] = React.useState<SortMode>("newest");
-  const [host, setHost] = React.useState("relay.vercel.app");
+  const [host, setHost] = React.useState("withrelay.vercel.app");
   React.useEffect(() => {
     setHost(shortHost());
   }, []);
@@ -919,7 +919,7 @@ function WorkspaceForm({ prefs }: { prefs: Preferences }) {
       >
         <Input
           id="shortDomain"
-          value="relay.vercel.app"
+          value="withrelay.vercel.app"
           disabled
           className="cursor-not-allowed font-mono text-sm opacity-70"
         />

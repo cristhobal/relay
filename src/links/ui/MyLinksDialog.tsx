@@ -41,7 +41,7 @@ export function MyLinksDialog({
   onSignIn,
 }: Props) {
   const [links, setLinks] = React.useState<ShortLink[]>([]);
-  const [host, setHost] = React.useState("relay.vercel.app");
+  const [host, setHost] = React.useState("withrelay.vercel.app");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [editingLink, setEditingLink] = React.useState<ShortLink | null>(null);
   const [deletingLink, setDeletingLink] = React.useState<ShortLink | null>(

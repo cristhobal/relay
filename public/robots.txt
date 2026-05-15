@@ -1,4 +1,4 @@
-# robots.txt — relay (https://relay.vercel.app)
+# robots.txt — relay (https://withrelay.vercel.app)
 # Generated: 2026-05-04
 
 # ── Global rules ────────────────────────────────────────────────────────────
@@ -55,4 +55,4 @@ User-agent: MJ12bot
 Crawl-delay: 10
 
 # ── Sitemap ──────────────────────────────────────────────────────────────────
-Sitemap: https://relay.vercel.app/sitemap.xml
+Sitemap: https://withrelay.vercel.app/sitemap.xml
