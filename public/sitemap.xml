@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!--
+    sitemap.xml — relay (https://relay.vercel.app)
+    Generated: 2026-05-04
+
+    Only the public, indexable page is listed here.
+    /dashboard  → noindex (private, auth-gated)
+    /[slug]     → 302 redirects, not indexable content
+    /api/*      → API routes, not indexable
+    /auth/*     → OAuth callback, not indexable
+  -->
+
+  <url>
+    <loc>https://relay.vercel.app/</loc>
+    <lastmod>2026-05-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+</urlset>

@@ -1,0 +1,25 @@
+---
+import Layout from "@/layouts/Layout.astro"
+import Landing from "@/users/ui/Landing.tsx"
+import { getSession } from "auth-astro/server"
+import { normaliseSession } from "@/auth/infrastructure/session"
+
+const oauthConfigured =
+  Boolean(import.meta.env.GOOGLE_CLIENT_ID) &&
+  Boolean(import.meta.env.GITHUB_CLIENT_ID)
+
+const authSession = oauthConfigured ? await getSession(Astro.request) : null
+const appSession = authSession ? normaliseSession(authSession) : null
+---
+
+<Layout
+  title="relay — Free URL Shortener · Create Short Links Instantly"
+  description="A fast, free and open-source URL shortener. Create tidy short links in seconds — no account required. Sign in with Google or GitHub to track clicks and manage links."
+  schemaType="WebApplication"
+>
+  <Landing
+    client:load
+    oauthConfigured={oauthConfigured}
+    session={appSession}
+  />
+</Layout>

@@ -1,0 +1,58 @@
+# robots.txt — relay (https://relay.vercel.app)
+# Generated: 2026-05-04
+
+# ── Global rules ────────────────────────────────────────────────────────────
+User-agent: *
+
+# Allow the public homepage and static assets
+Allow: /$
+Allow: /_astro/
+Allow: /favicon*
+Allow: /relay.png
+
+# Disallow private / functional routes
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /_image
+
+# Disallow all short-link redirect paths (they are transient redirects,
+# not indexable content — indexing them wastes crawl budget)
+Disallow: /*/
+
+# ── AI / LLM crawlers ───────────────────────────────────────────────────────
+# Opt out of training-data collection by AI scrapers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+# ── Crawl-delay hint for heavy crawlers ─────────────────────────────────────
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Crawl-delay: 10
+
+# ── Sitemap ──────────────────────────────────────────────────────────────────
+Sitemap: https://relay.vercel.app/sitemap.xml

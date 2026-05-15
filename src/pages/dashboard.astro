@@ -1,0 +1,33 @@
+---
+import Layout from "@/layouts/Layout.astro"
+import Dashboard from "@/links/ui/Dashboard.tsx"
+import { getSession } from "auth-astro/server"
+import { normaliseSession, type AppSession } from "@/auth/infrastructure/session"
+
+const oauthConfigured =
+  Boolean(import.meta.env.GOOGLE_CLIENT_ID) &&
+  Boolean(import.meta.env.GITHUB_CLIENT_ID)
+
+let session: AppSession | null = null
+
+if (oauthConfigured) {
+  // Real OAuth — check server-side session
+  const authSession = await getSession(Astro.request)
+  if (!authSession) return Astro.redirect("/")
+  session = normaliseSession(authSession)
+}
+// In demo mode (oauthConfigured=false), Dashboard.tsx will read the
+// demo session from localStorage and redirect to "/" if absent.
+---
+
+<Layout
+  title="Dashboard — relay"
+  description="Manage your short links — view click stats, edit destinations, and copy or delete entries."
+  noindex
+>
+  <Dashboard
+    client:only="react"
+    session={session}
+    oauthConfigured={oauthConfigured}
+  />
+</Layout>

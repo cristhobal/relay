@@ -1,0 +1,202 @@
+---
+import "@/styles/global.css";
+import ToasterIsland from "@/shared/ui/ToasterIsland";
+import ShortcutsIsland from "@/shared/ui/ShortcutsIsland";
+import { getSession } from "auth-astro/server";
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  schemaType?: "WebApplication" | "WebPage";
+}
+
+const SITE_NAME = "relay";
+const SITE_URL = "https://relay.vercel.app";
+const DEFAULT_TITLE =
+  "relay — Free URL Shortener · Create Short Links Instantly";
+const DEFAULT_DESCRIPTION =
+  "relay is a fast, free and open-source URL shortener. Create short links in seconds — anonymously or with a Google / GitHub account. No account required.";
+const TWITTER_HANDLE = "@cristhobal";
+
+const {
+  title = DEFAULT_TITLE,
+  description = DEFAULT_DESCRIPTION,
+  image = "/relay.png",
+  noindex = false,
+  schemaType = "WebApplication",
+} = Astro.props;
+
+const canonicalUrl = new URL(
+  Astro.url.pathname,
+  Astro.site ?? SITE_URL,
+).toString();
+const ogImageUrl = new URL(image, Astro.site ?? SITE_URL).toString();
+
+const oauthConfigured =
+  Boolean(import.meta.env.GOOGLE_CLIENT_ID) &&
+  Boolean(import.meta.env.GITHUB_CLIENT_ID);
+
+let hasServerSession = false;
+if (oauthConfigured) {
+  const authSession = await getSession(Astro.request);
+  hasServerSession = Boolean(authSession);
+}
+
+const jsonLd =
+  schemaType === "WebApplication"
+    ? {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        name: SITE_NAME,
+        url: SITE_URL,
+        description: DEFAULT_DESCRIPTION,
+        applicationCategory: "UtilityApplication",
+        operatingSystem: "Any",
+        browserRequirements: "Requires JavaScript",
+        inLanguage: "en",
+        isAccessibleForFree: true,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        author: {
+          "@type": "Person",
+          name: "Cristóbal Hertel",
+          url: "https://cristhobal.cl",
+        },
+        featureList: [
+          "Instant short link creation",
+          "Anonymous mode (no account required)",
+          "Custom slugs",
+          "Click analytics",
+          "Google and GitHub login",
+          "Open source",
+        ],
+      }
+    : {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        name: title,
+        url: canonicalUrl,
+        description,
+        isPartOf: { "@type": "WebSite", name: SITE_NAME, url: SITE_URL },
+      };
+---
+
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary meta -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Cristóbal Hertel" />
+    <meta
+      name="keywords"
+      content="url shortener, link shortener, short link, free url shortener, open source url shortener, relay"
+    />
+
+    <!-- Robots -->
+    {
+      noindex ? (
+        <meta name="robots" content="noindex, nofollow" />
+      ) : (
+        <meta
+          name="robots"
+          content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+        />
+      )
+    }
+
+    <!-- Theme color -->
+    <meta
+      name="theme-color"
+      content="#ffffff"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0a0a0a"
+      media="(prefers-color-scheme: dark)"
+    />
+
+    <!-- Canonical & Sitemap -->
+    <link rel="canonical" href={canonicalUrl} />
+    {
+      !noindex && (
+        <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+      )
+    }
+
+    <!-- Icons & Manifest -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" sizes="192x192" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content="relay — Free URL Shortener" />
+    <meta property="og:image:width" content="1920" />
+    <meta property="og:image:height" content="953" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content="relay — Free URL Shortener" />
+    <meta name="twitter:creator" content={TWITTER_HANDLE} />
+    <meta name="twitter:site" content={TWITTER_HANDLE} />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+    <!-- Apply theme before paint (avoids flash) -->
+    <script is:inline>
+      try {
+        const stored = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        const theme = stored ?? (prefersDark ? "dark" : "light");
+        if (theme === "dark") document.documentElement.classList.add("dark");
+      } catch (_) {}
+
+      // Reacciona en tiempo real si el usuario cambia el tema del SO
+      // (solo si no eligió manualmente con el botón)
+      try {
+        window
+          .matchMedia("(prefers-color-scheme: dark)")
+          .addEventListener("change", (e) => {
+            if (!localStorage.getItem("theme")) {
+              document.documentElement.classList.toggle("dark", e.matches);
+            }
+          });
+      } catch (_) {}
+    </script>
+  </head>
+  <body>
+    <slot />
+    <ToasterIsland client:load />
+    <ShortcutsIsland hasServerSession={hasServerSession} client:load />
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>

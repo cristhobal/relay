@@ -1,0 +1,51 @@
+---
+import Layout from "@/layouts/Layout.astro"
+---
+
+<Layout title="Signing in… — relay" noindex>
+  <div class="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center">
+    <span
+      class="size-5 animate-spin rounded-full border-2 border-foreground/20 border-t-foreground"
+      aria-hidden
+    ></span>
+    <p class="text-sm text-muted-foreground">Signing you in…</p>
+    <p class="text-xs text-muted-foreground">
+      You can close this window if it doesn't close on its own.
+    </p>
+  </div>
+</Layout>
+
+<script>
+  /*
+   * The OAuth flow lands here on success: auth-astro has just written the
+   * session cookie for our origin and redirected the popup to this page.
+   *
+   * Our job is to notify the parent window and close ourselves so the user
+   * keeps their context in the original tab.
+   *
+   * If we somehow ended up here without an opener (e.g. user opened the URL
+   * directly), fall back to a normal navigation so the page is still useful.
+   */
+  (function () {
+    const ORIGIN = window.location.origin
+    const SUCCESS_MESSAGE = { type: "relay:auth-success" } as const
+
+    const opener = window.opener as Window | null
+
+    if (opener && !opener.closed) {
+      try {
+        opener.postMessage(SUCCESS_MESSAGE, ORIGIN)
+      } catch (err) {
+        console.error("[relay] popup → opener postMessage failed:", err)
+      }
+      // Give the message a tick to flush, then close.
+      window.setTimeout(() => {
+        try { window.close() } catch { /* noop */ }
+      }, 50)
+      return
+    }
+
+    // No opener — treat as a regular landing.
+    window.location.replace("/dashboard")
+  })()
+</script>
