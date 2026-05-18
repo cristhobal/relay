@@ -7,8 +7,16 @@
 -- Este script:
 --   1. Crea la base de datos `relay`
 --   2. Crea las tablas (users, accounts, links)
---   3. Crea el usuario `relay_app` con permisos mínimos
+--   3. Crea/actualiza el usuario `relay_app` y le asigna los permisos mínimos
 --   4. Verifica que todo quedó bien
+--
+-- ANTES DE CORRER:
+--   Reemplazá <CAMBIAR_ESTA_PASSWORD> (línea ~135) por una contraseña fuerte.
+--   Esa MISMA contraseña va en DATABASE_PASSWORD del .env / Vercel env vars.
+--
+-- Es idempotente: podés re-correrlo cuantas veces quieras. El bloque del
+-- usuario usa CREATE + ALTER para que re-correr siempre deje la contraseña
+-- y los grants sincronizados, incluso si el user ya existía.
 -- ============================================================================
 
 
@@ -44,8 +52,23 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_users_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
--- Migration note (existing databases):
---   ALTER TABLE `users` DROP COLUMN `bio`;
+
+-- Migration para bases existentes creadas con un schema viejo.
+-- MySQL no soporta `ADD COLUMN IF NOT EXISTS`, así que las dos columnas
+-- nuevas se agregan vía stored procedure que ignora el error si ya existen.
+DROP PROCEDURE IF EXISTS `relay_migrate_users`;
+DELIMITER //
+CREATE PROCEDURE `relay_migrate_users`()
+BEGIN
+  DECLARE CONTINUE HANDLER FOR 1060 BEGIN END; -- 1060 = Duplicate column name
+  DECLARE CONTINUE HANDLER FOR 1091 BEGIN END; -- 1091 = Can't DROP, doesn't exist
+  ALTER TABLE `users` ADD COLUMN `display_name` VARCHAR(120) NULL;
+  ALTER TABLE `users` ADD COLUMN `short_domain` VARCHAR(255) NULL;
+  ALTER TABLE `users` DROP COLUMN `bio`;
+END //
+DELIMITER ;
+CALL `relay_migrate_users`();
+DROP PROCEDURE `relay_migrate_users`;
 
 
 -- ----------------------------------------------------------------------------
@@ -118,13 +141,24 @@ CREATE TABLE IF NOT EXISTS `links` (
 
 
 -- ----------------------------------------------------------------------------
--- 6. Crear el usuario `relay_app` con permisos mínimos
+-- 6. Crear/actualizar el usuario `relay_app` y sus permisos
 -- ----------------------------------------------------------------------------
 -- El '%' permite conectar desde cualquier IP. Si vas a restringir por IP
 -- específica, reemplazalo por la IP del cliente (ej: 'relay_app'@'76.76.21.21').
+--
+-- IMPORTANTE: poné la misma contraseña en DATABASE_PASSWORD del .env y en
+-- las env vars de Vercel. Si las dos no coinciden, el login se cae con
+-- "Access denied" en TODOS los proveedores OAuth (auth.config.ts:46).
+--
+-- CREATE USER es idempotente vía IF NOT EXISTS, pero NO actualiza la
+-- contraseña si el user ya existía. Por eso el ALTER USER después: garantiza
+-- que re-correr el script siempre sincronice la contraseña al valor de abajo.
 -- ----------------------------------------------------------------------------
 CREATE USER IF NOT EXISTS 'relay_app'@'%'
-  IDENTIFIED BY '';
+  IDENTIFIED BY 'osAlak9mMbHqQgNMbtgkJovsZzPazX1i41QuS78nOHE=';
+
+ALTER USER 'relay_app'@'%'
+  IDENTIFIED BY 'osAlak9mMbHqQgNMbtgkJovsZzPazX1i41QuS78nOHE=';
 
 GRANT SELECT, INSERT, UPDATE, DELETE
   ON `relay`.* TO 'relay_app'@'%';
@@ -136,11 +170,16 @@ FLUSH PRIVILEGES;
 -- VERIFICACIÓN — corré estas queries para confirmar que todo quedó bien
 -- ============================================================================
 
--- Deberías ver 3 tablas: users, accounts, links
+-- 1. Deberían aparecer 3 tablas: accounts, links, users
 SHOW TABLES FROM `relay`;
 
--- Deberías ver el user 'relay_app' (entre otros)
+-- 2. La tabla `users` debe tener display_name y short_domain (post-migration)
+DESCRIBE `relay`.`users`;
+
+-- 3. El user 'relay_app'@'%' debe existir
 SELECT `User`, `Host` FROM `mysql`.`user` WHERE `User` = 'relay_app';
 
--- Deberías ver los grants de SELECT, INSERT, UPDATE, DELETE en relay.*
+-- 4. Tienen que aparecer 2 líneas — la de USAGE y la de
+--    `GRANT SELECT, INSERT, UPDATE, DELETE ON relay.*`. Si sólo ves USAGE,
+--    los grants no se aplicaron y el login va a fallar con error 1044.
 SHOW GRANTS FOR 'relay_app'@'%';

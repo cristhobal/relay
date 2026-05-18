@@ -1,11 +1,14 @@
 ---
-import Layout from "@/layouts/Layout.astro"
-import { dbConfigured } from "@/shared/database/mysql"
-import { findLinkBySlug, incrementClicks } from "@/links/infrastructure/link-repository"
+import Layout from "@/layouts/Layout.astro";
+import { dbConfigured } from "@/shared/database/mysql";
+import {
+  findLinkBySlug,
+  incrementClicks,
+} from "@/links/infrastructure/link-repository";
 
-export const prerender = false
+export const prerender = false;
 
-const { slug } = Astro.params
+const { slug } = Astro.params;
 
 // Reserved paths that should never be treated as a slug.
 const RESERVED = new Set([
@@ -14,31 +17,33 @@ const RESERVED = new Set([
   "_astro",
   "_image",
   "favicon.ico",
-  "favicon.svg",
-])
+  "favicon.png",
+]);
 
 if (!slug || RESERVED.has(slug)) {
-  return new Response(null, { status: 404 })
+  return new Response(null, { status: 404 });
 }
 
 // Try DB first (works for any visitor, on any device)
 if (dbConfigured()) {
   try {
-    const link = await findLinkBySlug(slug)
+    const link = await findLinkBySlug(slug);
     if (link) {
       // Fire-and-forget click increment — don't block the redirect
-      incrementClicks(slug).catch(() => {})
-      return Astro.redirect(link.destination, 301)
+      incrementClicks(slug).catch(() => {});
+      return Astro.redirect(link.destination, 301);
     }
   } catch (err) {
-    console.error("[slug] DB lookup failed:", err)
+    console.error("[slug] DB lookup failed:", err);
     // fall through to client-side fallback
   }
 }
 ---
 
 <Layout title={`Redirecting… — relay`} noindex={true}>
-  <div class="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-6">
+  <div
+    class="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-6"
+  >
     <div id="redirect-state" class="max-w-sm text-center">
       <span
         class="mx-auto mb-4 block size-5 animate-spin rounded-full border-2 border-foreground/20 border-t-foreground"
@@ -54,18 +59,18 @@ if (dbConfigured()) {
   // Fallback: the slug isn't in the DB — maybe it's an anonymous link
   // stored in this browser's localStorage. Look it up locally.
   try {
-    const raw = localStorage.getItem("relay:links")
-    const links = raw ? JSON.parse(raw) : []
+    const raw = localStorage.getItem("relay:links");
+    const links = raw ? JSON.parse(raw) : [];
     const link = links.find(
-      (l) => (l.slug || "").toLowerCase() === String(slug).toLowerCase()
-    )
+      (l) => (l.slug || "").toLowerCase() === String(slug).toLowerCase(),
+    );
 
     if (link && link.destination) {
-      link.clicks = (link.clicks || 0) + 1
-      localStorage.setItem("relay:links", JSON.stringify(links))
-      window.location.replace(link.destination)
+      link.clicks = (link.clicks || 0) + 1;
+      localStorage.setItem("relay:links", JSON.stringify(links));
+      window.location.replace(link.destination);
     } else {
-      const el = document.getElementById("redirect-state")
+      const el = document.getElementById("redirect-state");
       if (el) {
         el.innerHTML = `
           <h1 class="text-2xl font-semibold tracking-tight">Link not found</h1>
@@ -75,10 +80,10 @@ if (dbConfigured()) {
           <a href="/" class="mt-6 inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm shadow-xs hover:bg-muted">
             ← Back home
           </a>
-        `
+        `;
       }
     }
   } catch (err) {
-    console.error(err)
+    console.error(err);
   }
 </script>
