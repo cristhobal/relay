@@ -185,6 +185,9 @@ const jsonLd =
           });
       } catch (_) {}
     </script>
+    <style is:global>
+      html[data-i18n-loading] { visibility: hidden; }
+    </style>
     <script is:inline>
     (function() {
       try {
@@ -198,9 +201,6 @@ const jsonLd =
       } catch(e) {}
     })();
     </script>
-    <style is:global>
-      html[data-i18n-loading] { visibility: hidden; }
-    </style>
   </head>
   <body>
     <slot />
