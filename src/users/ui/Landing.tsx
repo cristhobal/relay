@@ -105,15 +105,9 @@ export default function Landing({
     <div className="flex min-h-screen flex-col">
       {/* Header */}
       <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-        <div className="flex items-center justify-between gap-2">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid size-8 shrink-0 place-items-center rounded-md bg-foreground text-background">
-              <Link2 className="size-4" strokeWidth={2.5} />
-            </span>
             <Wordmark />
-            <span className="hidden rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block" data-i18n="landing.badge">
-              beta
-            </span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {!isLoggedIn && (
@@ -218,14 +212,11 @@ export default function Landing({
         role="contentinfo"
       >
         <div className="pt-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs sm:text-sm text-muted-foreground">
-            <p className="tracking-tight font-medium">
-              {t("landing.footer.tagline")}
-            </p>
+          <div class="flex items-center justify-center gap-1 text-xs sm:text-sm text-muted-foreground">
             <a
               href="https://www.cristhobal.cl/"
               target="_blank"
-              className="opacity-60"
+              className="opacity-60 hover:opacity-100 transition-opacity"
             >
               <span>{t("landing.footer.copyright", { year: new Date().getFullYear() })}</span>
             </a>

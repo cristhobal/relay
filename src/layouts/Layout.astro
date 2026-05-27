@@ -185,9 +185,7 @@ const jsonLd =
           });
       } catch (_) {}
     </script>
-    <style is:global>
-      html[data-i18n-loading] { visibility: hidden; }
-    </style>
+    <script is:inline>document.documentElement.style.visibility="hidden"</script>
     <script is:inline>
     (function() {
       try {
@@ -197,7 +195,7 @@ const jsonLd =
             localStorage.setItem("relay-lang", lang);
           }
         }
-        document.documentElement.removeAttribute("data-i18n-loading");
+        document.documentElement.style.visibility = ""
         var titles = {
           en: "relay | Free URL Shortener \u00b7 Create Short Links Instantly",
           es: "relay | Acortador de URLs Gratuito \u00b7 Crea Enlaces Cortos al Instante",

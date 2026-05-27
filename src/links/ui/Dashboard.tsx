@@ -327,15 +327,9 @@ function DashboardHeader({
   const { t } = useLanguage()
   return (
     <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <div className="flex items-center justify-between gap-2">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span className="grid size-8 shrink-0 place-items-center rounded-md bg-foreground text-background">
-            <Link2 className="size-4" strokeWidth={2.5} />
-          </span>
           <Wordmark />
-          <span className="hidden rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block">
-            {t("landing.badge")}
-          </span>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <ThemeToggle />

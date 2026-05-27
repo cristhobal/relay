@@ -8,9 +8,9 @@ export function Wordmark({ className }: { className?: string }) {
         "text-sm font-semibold tracking-tight text-foreground transition-opacity hover:opacity-70",
         className
       )}
-      aria-label="relay"
+      aria-label="Relay"
     >
-      relay
+      Relay
     </a>
   )
 }
