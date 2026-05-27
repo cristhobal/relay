@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(nc -z -w 5 104.234.7.225 3306)",
-      "PowerShell(Test-NetConnection *)"
+      "PowerShell(Test-NetConnection *)",
+      "Bash(git *)"
     ]
   }
 }
