@@ -8,6 +8,7 @@ import { LinkCreatedDialog } from "@/links/ui/LinkCreatedDialog";
 import { MyLinksDialog } from "@/links/ui/MyLinksDialog";
 import { UserMenu } from "@/users/ui/UserMenu";
 import { Star, Link2, ArrowRight } from "lucide-react";
+import { useLanguage } from "@/i18n/useLanguage";
 
 const BugReportButton = () => (
   <a
@@ -48,6 +49,7 @@ export default function Landing({
   oauthConfigured = false,
   session: initialSession = null,
 }: Props) {
+  const { t } = useLanguage();
   const [authOpen, setAuthOpen] = React.useState(false);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [createdLink, setCreatedLink] = React.useState<ShortLink | null>(null);
@@ -109,14 +111,14 @@ export default function Landing({
               <Link2 className="size-4" strokeWidth={2.5} />
             </span>
             <Wordmark />
-            <span className="hidden rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block">
+            <span className="hidden rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block" data-i18n="landing.badge">
               beta
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {!isLoggedIn && (
               <Button variant="ghost" size="sm" onClick={handleSignIn}>
-                Sign in
+                {t("nav.signin")}
               </Button>
             )}
             <Button
@@ -159,19 +161,16 @@ export default function Landing({
       <main className="flex flex-1 items-center justify-center px-4 sm:px-6">
         <div className="flex max-w-2xl flex-col items-center gap-5 text-center sm:gap-6">
           <h1 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            Make every
-            <br className="hidden sm:block" /> link count.
+            {t("landing.hero.title")}
           </h1>
           <p className="text-balance text-base leading-relaxed text-muted-foreground sm:text-lg md:text-xl">
-            relay is a small URL shortener for tidy links. Shorten, organise and
-            measure the URLs you share — without breaking what you&rsquo;ve
-            already published.
+            {t("landing.hero.subtitle")}
           </p>
 
           <div className="mt-2 flex flex-col items-center justify-center gap-2 sm:flex-row sm:flex-wrap">
             <Button onClick={handleCreate} size="lg">
               <Link2 />
-              {isLoggedIn ? "Go to dashboard" : "Create a link"}
+              {isLoggedIn ? t("landing.cta.dashboard") : t("landing.cta.create")}
             </Button>
             <Button variant="outline" size="lg" asChild>
               <a
@@ -181,28 +180,29 @@ export default function Landing({
                 aria-label="Star relay on GitHub"
               >
                 <Star />
-                Star on GitHub
+                {t("landing.cta.star")}
               </a>
             </Button>
           </div>
 
           {!isLoggedIn && anonymousCount > 0 && (
             <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
-              <p className="text-balance">
+              <p className="text-balance" data-i18n="landing.anonymous.used" data-i18n-vars={JSON.stringify({count: anonymousCount, limit: ANONYMOUS_LINK_LIMIT})}>
                 {anonymousCount} of {ANONYMOUS_LINK_LIMIT} free links used.{" "}
                 <button
                   type="button"
                   onClick={handleSignIn}
                   className="text-foreground underline-offset-4 hover:underline"
                 >
-                  Sign in
+                  {t("nav.signin")}
                 </button>{" "}
-                for unlimited and to keep them in sync.
+                <span>{t("landing.anonymous.unlimited")}</span>
               </p>
               <button
                 type="button"
                 onClick={() => setMyLinksOpen(true)}
                 className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline"
+                data-i18n="landing.anonymous.links"
               >
                 Click here to see all your links
                 <ArrowRight className="size-3" />
@@ -220,14 +220,14 @@ export default function Landing({
         <div className="pt-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs sm:text-sm text-muted-foreground">
             <p className="tracking-tight font-medium">
-              Try. Fail. Learn. Repeat.
+              {t("landing.footer.tagline")}
             </p>
             <a
               href="https://www.cristhobal.cl/"
               target="_blank"
               className="opacity-60"
             >
-              &copy; {new Date().getFullYear()} Cristhobal Canales.
+              <span>{t("landing.footer.copyright", { year: new Date().getFullYear() })}</span>
             </a>
           </div>
         </div>

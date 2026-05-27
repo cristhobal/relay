@@ -18,6 +18,7 @@ import {
   isValidSlug,
   isValidUrl,
 } from "@/links/domain/short-link";
+import { useLanguage } from "@/i18n/useLanguage"
 import { slugTaken, updateLink } from "@/links/application/link-service";
 import { shortHost } from "@/shared/utils/short-url";
 import { AlertTriangle } from "lucide-react";
@@ -35,6 +36,7 @@ export function EditLinkDialog({
   onUpdated,
   isAuthenticated,
 }: Props) {
+  const { t } = useLanguage()
   const [destination, setDestination] = React.useState("");
   const [slug, setSlug] = React.useState("");
   const [description, setDescription] = React.useState("");
@@ -64,14 +66,14 @@ export function EditLinkDialog({
   const validate = async (): Promise<boolean> => {
     if (!link) return false;
     const next: typeof errors = {};
-    if (!destination) next.destination = "Required";
+    if (!destination) next.destination = t("edit.error.required");
     else if (!isValidUrl(destination))
-      next.destination = "Must start with http:// or https://";
-    if (!slug) next.slug = "Required";
+      next.destination = t("edit.error.invalid_url");
+    if (!slug) next.slug = t("edit.error.required");
     else if (!isValidSlug(slug))
-      next.slug = "3–40 chars: letters, numbers, _ or -";
+      next.slug = t("edit.error.invalid_slug");
     else if (await slugTaken(isAuthenticated, slug, link.id))
-      next.slug = "Already taken";
+      next.slug = t("edit.error.taken");
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -94,17 +96,17 @@ export function EditLinkDialog({
         slug,
         description,
       });
-      toast.success("Link updated", {
+      toast.success(t("edit.success"), {
         description: slugChanged
-          ? `Now available at /${slug}`
-          : "Your changes have been saved.",
+          ? t("edit.success.slug_changed", { slug })
+          : t("edit.success.saved"),
       });
       onUpdated?.(updated);
       onOpenChange(false);
     } catch (err: any) {
-      const msg = err?.message ?? "Failed to update link";
+      const msg = err?.message ?? t("edit.error.failed");
       setErrors({ submit: msg });
-      toast.error("Failed to update link", { description: msg });
+      toast.error(t("edit.error.failed"), { description: msg });
     } finally {
       setSubmitting(false);
     }
@@ -117,16 +119,16 @@ export function EditLinkDialog({
       <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
         <ResponsiveDialogContent>
           <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Edit short link</ResponsiveDialogTitle>
+            <ResponsiveDialogTitle>{t("edit.title")}</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
-              Update the destination, slug or description.
+              {t("edit.desc")}
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
           <div className="grid gap-5 pt-1">
             <div className="grid gap-2">
               <Label htmlFor="edit-destination" className="text-sm font-medium">
-                Destination URL
+                {t("edit.label.destination")}
               </Label>
               <Input
                 id="edit-destination"
@@ -145,7 +147,7 @@ export function EditLinkDialog({
 
             <div className="grid gap-2">
               <Label htmlFor="edit-slug" className="text-sm font-medium">
-                Short link
+                {t("edit.label.slug")}
               </Label>
               <div
                 className={
@@ -174,8 +176,7 @@ export function EditLinkDialog({
                 <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/50 dark:bg-amber-950/30">
                   <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-500" />
                   <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-                    Changing the slug will break links you&rsquo;ve already
-                    shared. The old URL will stop working immediately.
+                    {t("edit.warning.slug_changed")}
                   </p>
                 </div>
               )}
@@ -183,9 +184,9 @@ export function EditLinkDialog({
 
             <div className="grid gap-2">
               <Label htmlFor="edit-description" className="text-sm font-medium">
-                Description{" "}
+                {t("edit.label.description")}{" "}
                 <span className="text-xs font-normal text-muted-foreground">
-                  Optional
+                  {t("common.optional")}
                 </span>
               </Label>
               <Textarea
@@ -193,7 +194,7 @@ export function EditLinkDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={200}
-                placeholder="What's this link for?"
+                placeholder={t("edit.placeholder.description")}
                 className="resize-none"
                 rows={2}
               />
@@ -212,14 +213,14 @@ export function EditLinkDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleSaveClick}
               disabled={submitting}
               aria-busy={submitting}
             >
-              {submitting ? "Saving…" : "Save changes"}
+              {submitting ? t("edit.saving") : t("edit.submit")}
             </Button>
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
@@ -228,21 +229,13 @@ export function EditLinkDialog({
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Change the short link?"
+        title={t("edit.confirm.title")}
         description={
           <>
-            You&rsquo;re about to rename{" "}
-            <span className="font-mono text-foreground">
-              {host}/{link.slug}
-            </span>{" "}
-            to{" "}
-            <span className="font-mono text-foreground">
-              {host}/{slug}
-            </span>
-            . The old link will stop working immediately.
+            {t("edit.confirm.desc", { oldSlug: `${host}/${link.slug}`, newSlug: `${host}/${slug}` })}
           </>
         }
-        confirmLabel="Yes, change it"
+        confirmLabel={t("edit.confirm.confirm")}
         variant="destructive"
         onConfirm={doSave}
       />

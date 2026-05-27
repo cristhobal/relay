@@ -9,6 +9,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { type AuthProvider } from "@/auth/infrastructure/session";
 import { setDemoSession } from "@/auth/infrastructure/demo-session";
+import { useLanguage } from "@/i18n/useLanguage";
 
 type Props = {
   open: boolean;
@@ -86,7 +87,7 @@ class PopupCancelledError extends Error {
  * closes itself). Rejects with PopupBlockedError if the browser refused to
  * open the popup, or PopupCancelledError if the user closed it manually.
  */
-async function signInWithPopup(provider: AuthProvider): Promise<void> {
+async function signInWithPopup(provider: AuthProvider, t: (key: string, vars?: Record<string, string | number>) => string): Promise<void> {
   // 1. Open the popup synchronously from the user-gesture handler — browsers
   //    only allow `window.open` from a direct user action, so opening before
   //    we await anything is critical.
@@ -96,10 +97,10 @@ async function signInWithPopup(provider: AuthProvider): Promise<void> {
 
   // Show a tiny "loading" placeholder while we fetch CSRF + submit.
   try {
-    popup.document.title = "Signing in…";
+    popup.document.title = t("auth.popup.signingin");
     popup.document.body.style.cssText =
       "margin:0;display:grid;place-items:center;height:100vh;font-family:system-ui;color:#888;background:#fff";
-    popup.document.body.innerHTML = "<p>Signing in…</p>";
+    popup.document.body.innerHTML = "<p>" + t("auth.popup.signingin") + "</p>";
   } catch {
     // about:blank in some browsers won't allow scripting until navigation;
     // ignore failures — they're cosmetic.
@@ -248,6 +249,7 @@ export function AuthDialog({
   redirectTo = "/dashboard",
   oauthConfigured = false,
 }: Props) {
+  const { t } = useLanguage();
   const [pending, setPending] = React.useState<AuthProvider | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -284,7 +286,7 @@ export function AuthDialog({
 
     // Desktop: try the popup flow. Fall back to a full redirect if blocked.
     try {
-      await signInWithPopup(provider);
+      await signInWithPopup(provider, t);
       // Cookie is now set on our origin. Navigate to the post-auth target —
       // a hard navigation makes sure the server-rendered page picks up the
       // new session.
@@ -302,9 +304,7 @@ export function AuthDialog({
         // Browser blocked the popup. Inform the user and offer a retry that
         // uses the full-page redirect.
         setPending(null);
-        setError(
-          "Your browser blocked the sign-in window. We'll redirect you instead.",
-        );
+        setError(t("auth.signin.popup_blocked"));
       }
 
       const { signIn } = await import("auth-astro/client");
@@ -317,9 +317,9 @@ export function AuthDialog({
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>Sign in</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>{t("auth.signin.title")}</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Choose a provider to continue.
+            {t("auth.signin.desc")}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
@@ -335,7 +335,7 @@ export function AuthDialog({
               <GoogleGlyph />
             </span>
             <span className={pending === "google" ? "invisible" : undefined}>
-              Continue with Google
+              {t("auth.signin.google")}
             </span>
             {pending === "google" && (
               <span className="absolute inset-0 flex items-center justify-center">
@@ -355,7 +355,7 @@ export function AuthDialog({
               <GithubGlyph />
             </span>
             <span className={pending === "github" ? "invisible" : undefined}>
-              Continue with GitHub
+              {t("auth.signin.github")}
             </span>
             {pending === "github" && (
               <span className="absolute inset-0 flex items-center justify-center">
@@ -375,7 +375,7 @@ export function AuthDialog({
               <DiscordGlyph />
             </span>
             <span className={pending === "discord" ? "invisible" : undefined}>
-              Continue with Discord
+              {t("auth.signin.discord")}
             </span>
             {pending === "discord" && (
               <span className="absolute inset-0 flex items-center justify-center">
@@ -389,11 +389,7 @@ export function AuthDialog({
 
         {!oauthConfigured && (
           <p className="text-xs text-muted-foreground">
-            Demo mode. Add OAuth credentials to{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
-              .env
-            </code>{" "}
-            for real sign-in.
+            {t("auth.signin.demo")}
           </p>
         )}
       </ResponsiveDialogContent>

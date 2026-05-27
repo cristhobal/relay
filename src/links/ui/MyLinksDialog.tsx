@@ -14,6 +14,7 @@ import {
   type ShortLink,
   ANONYMOUS_LINK_LIMIT,
 } from "@/links/domain/short-link";
+import { useLanguage } from "@/i18n/useLanguage"
 import { listLinks, removeLink } from "@/links/application/link-service";
 import { shortHost, shortUrl } from "@/shared/utils/short-url";
 import {
@@ -40,6 +41,7 @@ export function MyLinksDialog({
   onCreateNew,
   onSignIn,
 }: Props) {
+  const { t } = useLanguage()
   const [links, setLinks] = React.useState<ShortLink[]>([]);
   const [host, setHost] = React.useState("withrelay.vercel.app");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
@@ -68,12 +70,12 @@ export function MyLinksDialog({
       await navigator.clipboard.writeText(shortUrl(link.slug));
       setCopiedId(link.id);
       setTimeout(() => setCopiedId(null), 1400);
-      toast.success("Copied to clipboard!", {
+      toast.success(t("mylinks.copied"), {
         description: shortUrl(link.slug),
       });
     } catch {
-      toast.error("Failed to copy", {
-        description: "Your browser may have blocked clipboard access.",
+      toast.error(t("common.failed"), {
+        description: t("mylinks.clipboard_blocked"),
       });
     }
   };
@@ -83,12 +85,12 @@ export function MyLinksDialog({
     try {
       await removeLink(false, deletingLink.id);
       await refresh();
-      toast.success("Link deleted", {
-        description: `/${deletingLink.slug} has been removed.`,
+      toast.success(t("mylinks.deleted"), {
+        description: t("mylinks.deleted.desc", { slug: deletingLink.slug }),
       });
     } catch (err: any) {
-      toast.error("Failed to delete link", {
-        description: err?.message ?? "Something went wrong.",
+      toast.error(t("mylinks.delete_failed"), {
+        description: err?.message ?? t("common.something_wrong"),
       });
     } finally {
       setDeletingLink(null);
@@ -103,13 +105,9 @@ export function MyLinksDialog({
       <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
         <ResponsiveDialogContent className="sm:max-w-lg">
           <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Your links</ResponsiveDialogTitle>
+            <ResponsiveDialogTitle>{t("mylinks.title")}</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
-              Stored in this browser.{" "}
-              <span className="font-medium">
-                {used} of {ANONYMOUS_LINK_LIMIT}
-              </span>{" "}
-              free links used.
+              {t("mylinks.desc", { used: used.toString(), limit: ANONYMOUS_LINK_LIMIT.toString() })}
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
@@ -118,9 +116,9 @@ export function MyLinksDialog({
               <div className="mb-3 grid size-11 place-items-center rounded-full bg-muted">
                 <Link2 className="size-4 text-muted-foreground" />
               </div>
-              <p className="text-sm font-semibold">No links yet</p>
+              <p className="text-sm font-semibold">{t("mylinks.empty.title")}</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Create your first short link to get started.
+                {t("mylinks.empty.desc")}
               </p>
             </div>
           ) : (
@@ -157,8 +155,8 @@ export function MyLinksDialog({
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => handleCopy(link)}
-                      aria-label="Copy short link"
-                      title={copiedId === link.id ? "Copied" : "Copy"}
+                      aria-label={t("mylinks.copy")}
+                      title={copiedId === link.id ? t("mylinks.copied") : t("mylinks.copy_btn")}
                     >
                       {copiedId === link.id ? <Check /> : <Copy />}
                     </Button>
@@ -166,8 +164,8 @@ export function MyLinksDialog({
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => setEditingLink(link)}
-                      aria-label="Edit"
-                      title="Edit"
+                      aria-label={t("mylinks.edit")}
+                      title={t("mylinks.edit")}
                     >
                       <Pencil />
                     </Button>
@@ -175,8 +173,8 @@ export function MyLinksDialog({
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => setDeletingLink(link)}
-                      aria-label="Delete"
-                      title="Delete"
+                      aria-label={t("mylinks.delete")}
+                      title={t("mylinks.delete")}
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 />
@@ -190,12 +188,9 @@ export function MyLinksDialog({
           <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
               {remaining > 0 ? (
-                <>
-                  {remaining} free {remaining === 1 ? "link" : "links"}{" "}
-                  remaining
-                </>
+                <>{t("mylinks.remaining", { remaining: remaining.toString(), count: remaining })}</>
               ) : (
-                <>Limit reached. Sign in to create more.</>
+                <>{t("mylinks.limit_reached")}</>
               )}
             </p>
             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -208,7 +203,7 @@ export function MyLinksDialog({
                     onSignIn();
                   }}
                 >
-                  Sign in
+                  {t("mylinks.signin")}
                   <ArrowRight />
                 </Button>
               )}
@@ -221,7 +216,7 @@ export function MyLinksDialog({
                   }}
                 >
                   <Plus />
-                  New link
+                  {t("mylinks.new")}
                 </Button>
               )}
             </div>
@@ -242,18 +237,15 @@ export function MyLinksDialog({
       <ConfirmDialog
         open={Boolean(deletingLink)}
         onOpenChange={(open) => !open && setDeletingLink(null)}
-        title="Delete this short link?"
+        title={t("mylinks.delete.title")}
         description={
           deletingLink ? (
             <>
-              <span className="font-mono text-foreground">
-                {host}/{deletingLink.slug}
-              </span>{" "}
-              will stop working immediately. This cannot be undone.
+              {t("mylinks.delete.desc", { slug: `${host}/${deletingLink.slug}` })}
             </>
           ) : null
         }
-        confirmLabel="Delete"
+        confirmLabel={t("mylinks.delete.label")}
         variant="destructive"
         onConfirm={handleDelete}
       />

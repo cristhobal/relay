@@ -8,6 +8,7 @@ import {
 import { Button } from "@/shared/ui/button"
 import { Check, Copy, ExternalLink, Plus, Link2 } from "lucide-react"
 import { shortUrl } from "@/shared/utils/short-url"
+import { useLanguage } from "@/i18n/useLanguage"
 import type { ShortLink } from "@/links/domain/short-link"
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
 }
 
 export function LinkCreatedDialog({ link, onOpenChange, onCreateAnother }: Props) {
+  const { t } = useLanguage()
   const [copied, setCopied] = React.useState(false)
   const url = link ? shortUrl(link.slug) : ""
 
@@ -30,9 +32,9 @@ export function LinkCreatedDialog({ link, onOpenChange, onCreateAnother }: Props
       await navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
-      toast.success("Copied to clipboard!", { description: url })
+      toast.success(t("created.copied"), { description: url })
     } catch {
-      toast.error("Failed to copy", { description: "Your browser may have blocked clipboard access." })
+      toast.error(t("common.failed"), { description: t("created.clipboard_blocked") })
     }
   }
 
@@ -49,10 +51,10 @@ export function LinkCreatedDialog({ link, onOpenChange, onCreateAnother }: Props
             </div>
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Link ready
+                {t("created.title")}
               </p>
               <h2 className="text-base font-semibold leading-tight tracking-tight">
-                Your short link is live
+                {t("created.desc")}
               </h2>
             </div>
           </div>
@@ -61,12 +63,12 @@ export function LinkCreatedDialog({ link, onOpenChange, onCreateAnother }: Props
         {/* ── URL copy block ───────────────────────────────────────── */}
         <div className="px-6 py-5">
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Short URL
+            {t("created.shorturl")}
           </p>
           <button
             type="button"
             onClick={handleCopy}
-            aria-label={copied ? "Copied!" : "Copy short link"}
+            aria-label={copied ? t("created.copied_aria") : t("created.copy_aria")}
             className="group flex w-full items-center justify-between gap-3 rounded-md border border-border bg-muted/40 px-4 py-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="truncate font-mono text-sm font-semibold tracking-tight text-foreground">
@@ -84,7 +86,7 @@ export function LinkCreatedDialog({ link, onOpenChange, onCreateAnother }: Props
           </button>
           {copied && (
             <p className="mt-1.5 text-[11px] font-medium text-muted-foreground">
-              Copied to clipboard
+              {t("created.copied")}
             </p>
           )}
         </div>
@@ -110,12 +112,12 @@ export function LinkCreatedDialog({ link, onOpenChange, onCreateAnother }: Props
         {/* ── Footer ──────────────────────────────────────────────── */}
         <ResponsiveDialogFooter className="border-t border-border px-6 py-4">
           <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Done
+            {t("created.done")}
           </Button>
           {onCreateAnother && (
             <Button size="sm" onClick={onCreateAnother}>
               <Plus />
-              Create another
+              {t("created.create_another")}
             </Button>
           )}
         </ResponsiveDialogFooter>

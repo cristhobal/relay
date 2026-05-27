@@ -9,6 +9,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { useLanguage } from "@/i18n/useLanguage"
 import { ArrowUpRight, HelpCircle, LogOut, Settings, User } from "lucide-react";
 
 const BugIcon = () => (
@@ -56,6 +57,7 @@ export function UserMenu({
   onConfiguration,
   onSignOut,
 }: Props) {
+  const { t } = useLanguage()
   const name = displayName ?? session.user.name;
 
   return (
@@ -64,7 +66,7 @@ export function UserMenu({
         <button
           type="button"
           className="ml-1 rounded-full ring-offset-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          aria-label="Account menu"
+          aria-label={t("usermenu.account")}
         >
           <Avatar className="size-8">
             {session.user.image && (
@@ -108,7 +110,7 @@ export function UserMenu({
           <DropdownMenuItem asChild>
             <a href={dashboardHref}>
               <User />
-              Dashboard
+              {t("usermenu.dashboard")}
               <DropdownMenuShortcut>⌘D</DropdownMenuShortcut>
             </a>
           </DropdownMenuItem>
@@ -122,7 +124,7 @@ export function UserMenu({
             <DropdownMenuItem asChild>
               <a href={`${dashboardHref}?tab=configuration`}>
                 <Settings />
-                Configuration
+                {t("usermenu.configuration")}
                 <DropdownMenuShortcut>⌘,</DropdownMenuShortcut>
               </a>
             </DropdownMenuItem>
@@ -139,7 +141,7 @@ export function UserMenu({
               rel="noreferrer"
             >
               <HelpCircle />
-              Help &amp; docs
+              {t("usermenu.help")}
               <ArrowUpRight className="ml-auto size-3 opacity-60" />
             </a>
           </DropdownMenuItem>
@@ -150,7 +152,7 @@ export function UserMenu({
               rel="noreferrer"
             >
               <BugIcon />
-              Report a Bug
+              {t("usermenu.report")}
               <ArrowUpRight className="ml-auto size-3 opacity-60" />
             </a>
           </DropdownMenuItem>
@@ -161,7 +163,7 @@ export function UserMenu({
         <DropdownMenuGroup className="p-1">
           <DropdownMenuItem variant="destructive" onClick={onSignOut}>
             <LogOut />
-            Sign out
+            {t("usermenu.signout")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

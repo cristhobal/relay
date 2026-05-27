@@ -53,6 +53,7 @@ import {
 import { listLocalLinks } from "@/links/infrastructure/local-link-storage";
 import { shortHost, shortUrl } from "@/shared/utils/short-url";
 import { fullDate, timeAgo } from "@/shared/utils/time";
+import { useLanguage } from "@/i18n/useLanguage"
 import { cn } from "@/shared/utils/utils";
 
 type Tab = "links" | "configuration";
@@ -67,6 +68,7 @@ export default function Dashboard({
   session: initialSession,
   oauthConfigured,
 }: Props) {
+  const { t } = useLanguage()
   const [session, setSession] = React.useState<AppSession | null>(
     initialSession,
   );
@@ -117,10 +119,9 @@ export default function Dashboard({
           const result = await migrateLocalLinksToAccount();
           if (result.inserted > 0 && !cancelled) {
             toast.info(
-              `${result.inserted} ${result.inserted === 1 ? "link" : "links"} migrated`,
+              t("dashboard.migrated", { count: result.inserted.toString() }),
               {
-                description:
-                  "Links from your previous session were added to your account.",
+                description: t("dashboard.migrated.desc"),
               },
             );
           }
@@ -134,8 +135,8 @@ export default function Dashboard({
         if (!cancelled) setLinks(list);
       } catch (err) {
         console.error("[relay] failed to load links:", err);
-        toast.error("Failed to load links", {
-          description: "Check your connection and refresh.",
+        toast.error(t("dashboard.load_error"), {
+          description: t("dashboard.load_error.desc"),
         });
       } finally {
         if (!cancelled) setLoading(false);
@@ -160,12 +161,12 @@ export default function Dashboard({
       await navigator.clipboard.writeText(shortUrl(link.slug));
       setCopiedId(link.id);
       setTimeout(() => setCopiedId(null), 1400);
-      toast.success("Copied to clipboard!", {
+      toast.success(t("dashboard.copied"), {
         description: shortUrl(link.slug),
       });
     } catch {
-      toast.error("Failed to copy", {
-        description: "Your browser may have blocked clipboard access.",
+      toast.error(t("common.failed"), {
+        description: t("dashboard.clipboard_blocked"),
       });
     }
   };
@@ -178,16 +179,16 @@ export default function Dashboard({
     setLinks((prev) => prev.filter((l) => l.id !== linkToDelete.id));
     try {
       await removeLink(isAuthenticated, linkToDelete.id);
-      toast.success("Link deleted", {
-        description: `/${linkToDelete.slug} has been removed.`,
+      toast.success(t("dashboard.link_deleted"), {
+        description: t("dashboard.link_deleted.desc", { slug: linkToDelete.slug }),
       });
     } catch (err: any) {
       // Revert on failure
       setLinks((prev) =>
         [linkToDelete, ...prev].sort((a, b) => b.createdAt - a.createdAt),
       );
-      toast.error("Failed to delete link", {
-        description: err?.message ?? "Something went wrong.",
+      toast.error(t("dashboard.delete_error"), {
+        description: err?.message ?? t("common.something_wrong"),
       });
     }
   };
@@ -225,13 +226,13 @@ export default function Dashboard({
       <div className="border-b border-border px-4 sm:px-6 lg:px-8">
         <nav className="-mb-px flex gap-6" role="tablist">
           <TabButton active={tab === "links"} onClick={() => setTab("links")}>
-            Links
+            <span>{t("dashboard.tab.links")}</span>
           </TabButton>
           <TabButton
             active={tab === "configuration"}
             onClick={() => setTab("configuration")}
           >
-            Configuration
+            <span>{t("dashboard.tab.config")}</span>
           </TabButton>
         </nav>
       </div>
@@ -296,18 +297,15 @@ export default function Dashboard({
       <ConfirmDialog
         open={Boolean(deletingLink)}
         onOpenChange={(open) => !open && setDeletingLink(null)}
-        title="Delete this short link?"
+        title={t("dashboard.delete.title")}
         description={
           deletingLink ? (
             <>
-              <span className="font-mono text-foreground">
-                {shortHost()}/{deletingLink.slug}
-              </span>{" "}
-              will stop working immediately. This cannot be undone.
+              {t("dashboard.delete.desc", { slug: `${shortHost()}/${deletingLink.slug}` })}
             </>
           ) : null
         }
-        confirmLabel="Delete"
+        confirmLabel={t("dashboard.delete.label")}
         variant="destructive"
         onConfirm={handleDelete}
       />
@@ -326,6 +324,7 @@ function DashboardHeader({
   onConfiguration: () => void;
   onSignOut: () => void;
 }) {
+  const { t } = useLanguage()
   return (
     <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
       <div className="flex items-center justify-between gap-2">
@@ -335,7 +334,7 @@ function DashboardHeader({
           </span>
           <Wordmark />
           <span className="hidden rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground sm:inline-block">
-            beta
+            {t("landing.badge")}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -396,6 +395,7 @@ const LinksTab = React.memo(function LinksTab({
   onDelete: (l: ShortLink) => void;
   copiedId: string | null;
 }) {
+  const { t } = useLanguage()
   const [query, setQuery] = React.useState("");
   const [sort, setSort] = React.useState<SortMode>("newest");
   const [host, setHost] = React.useState("withrelay.vercel.app");
@@ -457,16 +457,16 @@ const LinksTab = React.memo(function LinksTab({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search links…"
+            placeholder={t("dashboard.search.placeholder")}
             className="h-9 pl-9 text-sm"
-            aria-label="Search links"
+            aria-label={t("dashboard.search.placeholder")}
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={t("dashboard.search.clear")}
             >
               <X className="size-3.5" />
             </button>
@@ -476,27 +476,26 @@ const LinksTab = React.memo(function LinksTab({
         <div className="ml-auto">
           <Button onClick={onCreate} size="sm">
             <Plus />
-            New link
+            {t("dashboard.links.new")}
           </Button>
         </div>
       </div>
 
       {query && (
         <p className="px-4 pb-2 text-xs text-muted-foreground sm:px-6 lg:px-8">
-          {visible.length} of {links.length} links match{" "}
-          <span className="font-medium text-foreground">"{query}"</span>
+          {t("dashboard.match_count", { count: visible.length.toString(), total: links.length.toString(), query })}
         </p>
       )}
 
       {visible.length === 0 ? (
         <div className="flex flex-col items-center justify-center px-4 py-16 text-center text-muted-foreground sm:px-6">
-          <p className="text-sm">No links match your search.</p>
+          <p className="text-sm">{t("dashboard.search.empty")}</p>
           <button
             type="button"
             onClick={() => setQuery("")}
             className="mt-2 text-xs text-foreground underline-offset-4 hover:underline"
           >
-            Clear filter
+            {t("dashboard.search.clear")}
           </button>
         </div>
       ) : (
@@ -527,16 +526,17 @@ function StatsBar({
   totalClicks: number;
   topLink: ShortLink | null;
 }) {
+  const { t } = useLanguage()
   return (
     <div className="grid grid-cols-1 divide-y divide-border border-y border-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-      <Stat label="Total links" value={total.toLocaleString()} />
-      <Stat label="Total clicks" value={totalClicks.toLocaleString()} />
+      <Stat label={t("dashboard.stats.links")} value={total.toLocaleString()} />
+      <Stat label={t("dashboard.stats.clicks")} value={totalClicks.toLocaleString()} />
       <Stat
-        label="Top link"
+        label={t("dashboard.stats.top")}
         value={topLink ? `/${topLink.slug}` : "—"}
         sublabel={
           topLink
-            ? `${topLink.clicks.toLocaleString()} ${topLink.clicks === 1 ? "click" : "clicks"}`
+            ? `${topLink.clicks.toLocaleString()} ${topLink.clicks === 1 ? t("dashboard.click") : t("dashboard.clicks")}`
             : undefined
         }
         mono
@@ -551,7 +551,7 @@ function Stat({
   sublabel,
   mono,
 }: {
-  label: string;
+  label: string | React.ReactNode;
   value: string;
   sublabel?: string;
   mono?: boolean;
@@ -592,22 +592,30 @@ function SortDropdown({
   value: SortMode;
   onChange: (v: SortMode) => void;
 }) {
+  const { t } = useLanguage()
+  const SORT_LABELS_T: Record<SortMode, string> = {
+    newest: t("dashboard.sort.newest"),
+    oldest: t("dashboard.sort.oldest"),
+    "most-clicks": t("dashboard.sort.most_clicks"),
+    alpha: t("dashboard.sort.alpha"),
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="font-normal">
           <ListFilter />
-          {SORT_LABELS[value]}
+          {SORT_LABELS_T[value]}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44">
-        {(Object.keys(SORT_LABELS) as SortMode[]).map((opt) => (
+        {(Object.keys(SORT_LABELS_T) as SortMode[]).map((opt) => (
           <DropdownMenuItem
             key={opt}
             onClick={() => onChange(opt)}
             className={cn(value === opt && "font-medium")}
           >
-            {SORT_LABELS[opt]}
+            {SORT_LABELS_T[opt]}
             {value === opt && <Check className="ml-auto size-3.5" />}
           </DropdownMenuItem>
         ))}
@@ -631,6 +639,7 @@ const LinkRow = React.memo(function LinkRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const { t } = useLanguage()
   return (
     <li className="group border-b border-border transition-colors hover:bg-muted/30">
       <div className="flex items-center gap-3 px-4 py-4 sm:gap-4 sm:px-6 lg:px-8">
@@ -668,7 +677,7 @@ const LinkRow = React.memo(function LinkRow({
               <span className="text-foreground">
                 {link.clicks.toLocaleString()}
               </span>{" "}
-              {link.clicks === 1 ? "click" : "clicks"}
+              {link.clicks === 1 ? t("dashboard.click") : t("dashboard.clicks")}
             </span>
             <span aria-hidden className="opacity-40">
               ·
@@ -682,7 +691,7 @@ const LinkRow = React.memo(function LinkRow({
           <span className="text-sm font-semibold tabular-nums text-foreground">
             {link.clicks.toLocaleString()}{" "}
             <span className="text-xs font-normal text-muted-foreground">
-              {link.clicks === 1 ? "click" : "clicks"}
+              {link.clicks === 1 ? t("dashboard.click") : t("dashboard.clicks")}
             </span>
           </span>
           <span
@@ -697,8 +706,8 @@ const LinkRow = React.memo(function LinkRow({
             variant="ghost"
             size="icon-sm"
             onClick={onCopy}
-            aria-label="Copy short link"
-            title={copied ? "Copied" : "Copy"}
+            aria-label={t("dashboard.row.copy")}
+            title={copied ? t("dashboard.row.copied") : t("dashboard.row.copy_btn")}
           >
             {copied ? <Check /> : <Copy />}
           </Button>
@@ -706,8 +715,8 @@ const LinkRow = React.memo(function LinkRow({
             variant="ghost"
             size="icon-sm"
             onClick={onEdit}
-            aria-label="Edit"
-            title="Edit"
+            aria-label={t("dashboard.row.edit")}
+            title={t("dashboard.row.edit")}
             className="hidden sm:inline-flex"
           >
             <Pencil />
@@ -716,8 +725,8 @@ const LinkRow = React.memo(function LinkRow({
             variant="ghost"
             size="icon-sm"
             onClick={onDelete}
-            aria-label="Delete"
-            title="Delete"
+            aria-label={t("dashboard.row.delete")}
+            title={t("dashboard.row.delete")}
             className="hidden text-muted-foreground hover:text-destructive sm:inline-flex"
           >
             <Trash2 />
@@ -727,7 +736,7 @@ const LinkRow = React.memo(function LinkRow({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label="More actions"
+                aria-label={t("dashboard.row.more")}
                 className="sm:hidden"
               >
                 <MoreVertical />
@@ -736,11 +745,11 @@ const LinkRow = React.memo(function LinkRow({
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem onClick={onEdit}>
                 <Pencil />
-                Edit
+                {t("dashboard.row.edit")}
               </DropdownMenuItem>
               <DropdownMenuItem variant="destructive" onClick={onDelete}>
                 <Trash2 />
-                Delete
+                {t("dashboard.row.delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -751,6 +760,7 @@ const LinkRow = React.memo(function LinkRow({
 });
 
 function EmptyLinks({ onCreate }: { onCreate: () => void }) {
+  const { t } = useLanguage()
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center sm:px-6">
       <div
@@ -759,14 +769,11 @@ function EmptyLinks({ onCreate }: { onCreate: () => void }) {
       >
         <Inbox className="size-6 text-muted-foreground" strokeWidth={1.5} />
       </div>
-      <h2 className="text-xl font-semibold tracking-tight">No links yet</h2>
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        Create your first short link. Paste any URL, pick a slug, and share it
-        anywhere.
-      </p>
+      <h2 className="text-xl font-semibold tracking-tight">{t("dashboard.empty.title")}</h2>
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">{t("dashboard.empty.desc")}</p>
       <Button onClick={onCreate} className="mt-7">
         <Plus />
-        Create your first link
+        {t("dashboard.empty.cta")}
       </Button>
     </div>
   );
@@ -783,12 +790,13 @@ function ConfigurationSection({
   onSave: (p: Preferences) => void;
   onSignOut: () => void;
 }) {
+  const { t } = useLanguage()
   return (
     <div className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
       <div className="mb-10 space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">Configuration</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.config.title")}</h1>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Manage your profile, workspace settings, and session.
+          {t("dashboard.config.desc")}
         </p>
       </div>
       <div className="space-y-12">
@@ -810,6 +818,7 @@ function ProfileForm({
   prefs: Preferences;
   onSave: (p: Preferences) => void;
 }) {
+  const { t } = useLanguage()
   const [displayName, setDisplayName] = React.useState(
     prefs.displayName ?? session.user.name,
   );
@@ -824,14 +833,14 @@ function ProfileForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName.trim()) {
-      toast.error("Validation error", {
-        description: "Display name cannot be empty.",
+      toast.error(t("dashboard.config.profile.validation_error"), {
+        description: t("dashboard.config.profile.empty_error"),
       });
       return;
     }
     if (displayName.trim().length < 2) {
-      toast.error("Validation error", {
-        description: "Display name must be at least 2 characters.",
+      toast.error(t("dashboard.config.profile.validation_error"), {
+        description: t("dashboard.config.profile.minlength_error"),
       });
       return;
     }
@@ -847,12 +856,12 @@ function ProfileForm({
         body: JSON.stringify({ displayName: next.displayName }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      toast.success("Profile saved", {
-        description: "Your changes have been applied.",
+      toast.success(t("dashboard.config.profile.saved"), {
+        description: t("dashboard.config.profile.saved.desc"),
       });
     } catch {
-      toast.error("Failed to sync profile", {
-        description: "Changes saved locally — they'll sync when you reconnect.",
+      toast.error(t("dashboard.config.profile.sync_error"), {
+        description: t("dashboard.config.profile.sync_error.desc"),
       });
     } finally {
       setSaving(false);
@@ -862,32 +871,32 @@ function ProfileForm({
   const handleReset = () => {
     setDisplayName(session.user.name);
     onSave({ ...prefs, displayName: undefined });
-    toast.success("Profile reset", {
-      description: "Reverted to your provider defaults.",
+    toast.success(t("dashboard.config.profile.reset"), {
+      description: t("dashboard.config.profile.reset.desc"),
     });
   };
 
   return (
     <FormSection
-      title="Profile"
-      subtitle="How you appear inside relay. Email is managed by your provider."
+      title={t("dashboard.config.profile.title")}
+      subtitle={t("dashboard.config.profile.desc")}
       onSubmit={handleSubmit}
     >
       <FormRow
-        label="Display name"
-        hint={`Overrides the name synced from ${session.provider}.`}
+        label={t("dashboard.config.profile.displayName")}
+        hint={t("dashboard.config.profile.displayNameHint", { provider: session.provider })}
       >
         <Input
           id="displayName"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={80}
-          placeholder="Your display name"
+          placeholder={t("dashboard.config.profile.displayNamePlaceholder")}
         />
       </FormRow>
       <FormRow
-        label="Email"
-        hint={`Linked to your ${session.provider} account. Read-only.`}
+        label={t("dashboard.config.profile.email")}
+        hint={t("dashboard.config.profile.emailHint", { provider: session.provider })}
       >
         <Input
           id="email"
@@ -907,15 +916,16 @@ function ProfileForm({
 }
 
 function WorkspaceForm({ prefs }: { prefs: Preferences }) {
+  const { t } = useLanguage()
   return (
     <FormSection
-      title="Workspace"
-      subtitle="The host used for all short links you create."
+      title={t("dashboard.config.workspace.title")}
+      subtitle={t("dashboard.config.workspace.desc")}
       onSubmit={(e) => e.preventDefault()}
     >
       <FormRow
-        label="Short domain"
-        hint="This domain is fixed and cannot be changed."
+        label={t("dashboard.config.workspace.shortDomain")}
+        hint={t("dashboard.config.workspace.shortDomainHint")}
       >
         <Input
           id="shortDomain"
@@ -941,6 +951,7 @@ function providerLabel(p: string) {
 }
 
 function LinkedAccountsSection({ session }: { session: AppSession }) {
+  const { t } = useLanguage()
   const [accounts, setAccounts] = React.useState<LinkedAccount[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [unlinking, setUnlinking] = React.useState<string | null>(null);
@@ -955,9 +966,7 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
 
   const handleUnlink = async (provider: string) => {
     if (
-      !confirm(
-        `Disconnect ${providerLabel(provider)}? You won't be able to sign in with it unless you link it again.`,
-      )
+      !confirm(t("dashboard.config.accounts.unlink_confirm", { provider: providerLabel(provider) }))
     )
       return;
     setUnlinking(provider);
@@ -968,15 +977,15 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
       });
       if (!res.ok) {
         const msg = await res.text();
-        toast.error("Could not unlink", { description: msg });
+        toast.error(t("dashboard.config.accounts.unlink_error"), { description: msg });
         return;
       }
       setAccounts((prev) => prev.filter((a) => a.provider !== provider));
-      toast.success(`${providerLabel(provider)} disconnected`, {
-        description: "You can re-link it at any time from this page.",
+      toast.success(t("dashboard.config.accounts.disconnected", { provider: providerLabel(provider) }), {
+        description: t("dashboard.config.accounts.disconnected.desc"),
       });
     } catch {
-      toast.error("Network error", { description: "Please try again." });
+      toast.error(t("dashboard.config.accounts.network_error"), { description: t("common.try_again") });
     } finally {
       setUnlinking(null);
     }
@@ -986,11 +995,10 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
     <div>
       <div className="mb-5">
         <h2 className="text-base font-semibold tracking-tight">
-          Connected accounts
+          {t("dashboard.config.accounts.title")}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          OAuth providers linked to this relay account. Each provider is
-          independent — linking is always explicit.
+          {t("dashboard.config.accounts.desc")}
         </p>
       </div>
 
@@ -1014,7 +1022,7 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
               </p>
             </div>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-              Active
+              {t("dashboard.config.accounts.active")}
             </span>
           </div>
         ) : (
@@ -1037,12 +1045,12 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
                       </p>
                       {isActive && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                          Current session
+                          {t("dashboard.config.accounts.current_session")}
                         </span>
                       )}
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      Linked{" "}
+                      {t("dashboard.config.accounts.linked")}{" "}
                       {new Date(account.linkedAt).toLocaleDateString(
                         undefined,
                         { year: "numeric", month: "short", day: "numeric" },
@@ -1057,7 +1065,7 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        Manage
+                        {t("dashboard.config.accounts.manage")}
                         <ArrowUpRight className="size-3" />
                       </a>
                     )}
@@ -1069,15 +1077,15 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
                       disabled={unlinking === account.provider || isActive}
                       title={
                         isActive
-                          ? "Cannot unlink the provider you are currently signed in with"
-                          : `Disconnect ${providerLabel(account.provider)}`
+                          ? t("dashboard.config.accounts.cannot_unlink")
+                          : t("dashboard.config.accounts.disconnect_title", { provider: providerLabel(account.provider) })
                       }
                       onClick={() => handleUnlink(account.provider)}
                     >
                       <Unlink className="size-3" />
                       {unlinking === account.provider
-                        ? "Disconnecting…"
-                        : "Disconnect"}
+                        ? t("dashboard.config.accounts.disconnecting")
+                        : t("dashboard.config.accounts.disconnect")}
                     </Button>
                   </div>
                 </li>
@@ -1087,11 +1095,10 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
         )}
 
         {/* Link new provider — informational footer */}
-        {accounts.length > 0 && (
+          {accounts.length > 0 && (
           <div className="border-t border-border bg-muted/30 px-4 py-3">
             <p className="text-xs text-muted-foreground">
-              To link a new provider, sign out and sign in with it. You'll be
-              able to merge it with this account from the new session.
+              {t("dashboard.config.accounts.link_hint")}
             </p>
           </div>
         )}
@@ -1101,17 +1108,18 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
 }
 
 function SessionSection({ onSignOut }: { onSignOut: () => void }) {
+  const { t } = useLanguage()
   return (
     <div>
       <div className="mb-5">
-        <h2 className="text-base font-semibold tracking-tight">Session</h2>
+        <h2 className="text-base font-semibold tracking-tight">{t("dashboard.config.session.title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          End your current session on this device.
+          {t("dashboard.config.session.desc")}
         </p>
       </div>
       <Button variant="outline" size="sm" onClick={onSignOut}>
         <LogOut />
-        Sign out
+        {t("dashboard.config.signout")}
       </Button>
     </div>
   );
@@ -1148,7 +1156,7 @@ function FormRow({
   hint,
   children,
 }: {
-  label: string;
+  label: string | React.ReactNode;
   hint?: string;
   children: React.ReactNode;
 }) {
@@ -1178,6 +1186,7 @@ function FormFooter({
   onReset: () => void;
   canReset: boolean;
 }) {
+  const { t } = useLanguage()
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-5 sm:gap-3">
       <Button
@@ -1187,7 +1196,7 @@ function FormFooter({
         onClick={onReset}
         disabled={!canReset || saving}
       >
-        Reset to defaults
+        {t("common.reset_defaults")}
       </Button>
       <Button
         type="submit"
@@ -1195,7 +1204,7 @@ function FormFooter({
         disabled={!dirty || saving}
         aria-busy={saving}
       >
-        {saving ? "Saving…" : "Save changes"}
+        {saving ? t("common.saving") : t("common.save_changes")}
       </Button>
     </div>
   );

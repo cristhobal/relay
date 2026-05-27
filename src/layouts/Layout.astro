@@ -3,6 +3,7 @@ import "@/styles/global.css";
 import ToasterIsland from "@/shared/ui/ToasterIsland";
 import ShortcutsIsland from "@/shared/ui/ShortcutsIsland";
 import { getSession } from "auth-astro/server";
+import Translate from "@/i18n/translate.astro";
 
 interface Props {
   title?: string;
@@ -189,6 +190,7 @@ const jsonLd =
     <slot />
     <ToasterIsland client:load />
     <ShortcutsIsland hasServerSession={hasServerSession} client:load />
+    <Translate />
   </body>
 </html>
 

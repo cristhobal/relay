@@ -24,6 +24,7 @@ import {
   countAnonymousLinks,
 } from "@/links/infrastructure/local-link-storage";
 import { createLink, slugTaken } from "@/links/application/link-service";
+import { useLanguage } from "@/i18n/useLanguage"
 import { shortHost } from "@/shared/utils/short-url";
 import { Shuffle, Lock, ArrowRight } from "lucide-react";
 
@@ -42,6 +43,7 @@ export function CreateLinkDialog({
   isAuthenticated,
   onRequestSignIn,
 }: Props) {
+  const { t } = useLanguage()
   const [destination, setDestination] = React.useState("");
   const [slug, setSlug] = React.useState(() => randomSlug());
   const [description, setDescription] = React.useState("");
@@ -69,14 +71,14 @@ export function CreateLinkDialog({
 
   const validate = async (): Promise<boolean> => {
     const next: typeof errors = {};
-    if (!destination) next.destination = "Required";
+    if (!destination) next.destination = t("create.error.required");
     else if (!isValidUrl(destination))
-      next.destination = "Must start with http:// or https://";
-    if (!slug) next.slug = "Required";
+      next.destination = t("create.error.invalid_url");
+    if (!slug) next.slug = t("create.error.required");
     else if (!isValidSlug(slug))
-      next.slug = "3–40 chars: letters, numbers, _ or -";
+      next.slug = t("create.error.invalid_slug");
     else if (await slugTaken(isAuthenticated, slug))
-      next.slug = "Already taken — try a different slug";
+      next.slug = t("create.error.taken");
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -93,10 +95,10 @@ export function CreateLinkDialog({
       onCreated?.(link);
       onOpenChange(false);
     } catch (err: any) {
-      const msg = err?.message ?? "Failed to create link";
+      const msg = err?.message ?? t("create.error.failed");
       // Map server error to slug field — the Sonner explains why, the red border shows where
       setErrors({ slug: msg });
-      toast.error("Failed to create link", { description: msg });
+      toast.error(t("create.error.failed"), { description: msg });
     } finally {
       setSubmitting(false);
     }
@@ -111,17 +113,15 @@ export function CreateLinkDialog({
               <Lock className="size-4" />
             </div>
             <ResponsiveDialogTitle>
-              You&rsquo;ve reached the free limit
+              {t("create.limit.title")}
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
-              You&rsquo;ve created {ANONYMOUS_LINK_LIMIT} short links without
-              signing in. Sign in to create unlimited links and keep them
-              synced.
+              {t("create.limit.desc", { limit: ANONYMOUS_LINK_LIMIT })}
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           <ResponsiveDialogFooter className="pt-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -129,7 +129,7 @@ export function CreateLinkDialog({
                 onRequestSignIn?.();
               }}
             >
-              Sign in
+              {t("create.limit.signin")}
               <ArrowRight />
             </Button>
           </ResponsiveDialogFooter>
@@ -146,29 +146,28 @@ export function CreateLinkDialog({
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent>
         <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>New short link</ResponsiveDialogTitle>
+          <ResponsiveDialogTitle>{t("create.title")}</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
-            Paste a destination URL, pick a slug, and optionally add a
-            description.
+            {t("create.desc")}
           </ResponsiveDialogDescription>
         </ResponsiveDialogHeader>
 
         <div className="grid gap-5 pt-1">
           <div className="grid gap-2">
-            <Label
-              htmlFor="destination"
-              className={
-                errors.destination
-                  ? "text-sm font-medium text-destructive"
-                  : "text-sm font-medium"
-              }
-            >
-              Destination URL
-            </Label>
-            <Input
-              id="destination"
-              type="url"
-              placeholder="https://example.com/long/path"
+              <Label
+                htmlFor="destination"
+                className={
+                  errors.destination
+                    ? "text-sm font-medium text-destructive"
+                    : "text-sm font-medium"
+                }
+              >
+                {t("create.label.destination")}
+              </Label>
+              <Input
+                id="destination"
+                type="url"
+                placeholder={t("create.placeholder.destination")}
               value={destination}
               onChange={(e) => {
                 setDestination(e.target.value);
@@ -193,7 +192,7 @@ export function CreateLinkDialog({
                     : "text-sm font-medium"
                 }
               >
-                Short link
+                {t("create.label.slug")}
               </Label>
               <Button
                 type="button"
@@ -202,7 +201,7 @@ export function CreateLinkDialog({
                 onClick={() => setSlug(randomSlug())}
               >
                 <Shuffle />
-                Randomize
+                {t("create.slug.randomize")}
               </Button>
             </div>
             <div
@@ -233,14 +232,14 @@ export function CreateLinkDialog({
 
           <div className="grid gap-2">
             <Label htmlFor="description" className="text-sm font-medium">
-              Description{" "}
+              {t("create.label.description")}{" "}
               <span className="text-xs font-normal text-muted-foreground">
-                Optional
+                {t("common.optional")}
               </span>
             </Label>
             <Textarea
               id="description"
-              placeholder="What's this link for?"
+              placeholder={t("create.placeholder.description")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={200}
@@ -251,7 +250,7 @@ export function CreateLinkDialog({
 
           {remaining !== null && (
             <p className="text-xs text-muted-foreground">
-              {remaining} of {ANONYMOUS_LINK_LIMIT} free links remaining.{" "}
+              {t("create.remaining", { remaining: remaining.toString(), limit: ANONYMOUS_LINK_LIMIT.toString() })}{" "}
               <button
                 type="button"
                 onClick={() => {
@@ -260,9 +259,9 @@ export function CreateLinkDialog({
                 }}
                 className="font-medium text-foreground underline-offset-4 hover:underline"
               >
-                Sign in
+                {t("create.remaining.signin")}
               </button>{" "}
-              for unlimited.
+              {t("create.remaining.unlimited")}
             </p>
           )}
         </div>
@@ -273,14 +272,14 @@ export function CreateLinkDialog({
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={submitting}
             aria-busy={submitting}
           >
-            {submitting ? "Creating…" : "Create link"}
+            {submitting ? t("create.creating") : t("create.submit")}
           </Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>

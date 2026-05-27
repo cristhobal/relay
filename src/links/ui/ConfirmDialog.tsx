@@ -8,6 +8,7 @@ import {
   ResponsiveDialogTitle,
 } from "@/shared/ui/responsive-dialog"
 import { Button } from "@/shared/ui/button"
+import { useLanguage } from "@/i18n/useLanguage"
 import { AlertTriangle, Info } from "lucide-react"
 
 type Props = {
@@ -29,11 +30,12 @@ export function ConfirmDialog({
   title,
   description,
   children,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   variant = "default",
   onConfirm,
 }: Props) {
+  const { t } = useLanguage()
   const [pending, setPending] = React.useState(false)
 
   const handleConfirm = async () => {
@@ -78,7 +80,7 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
-            {cancelLabel}
+            {cancelLabel ?? t("common.cancel")}
           </Button>
           <Button
             variant={variant === "destructive" ? "destructive" : "default"}
@@ -86,7 +88,7 @@ export function ConfirmDialog({
             disabled={pending}
             aria-busy={pending}
           >
-            {pending ? "Working…" : confirmLabel}
+            {pending ? t("common.working") : (confirmLabel ?? t("common.confirm"))}
           </Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
