@@ -1,5 +1,14 @@
-import { useState, useEffect } from "react"
-import { type Lang, detectLanguage } from "./translations"
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useContext,
+  createContext,
+  createElement,
+  type ReactNode,
+} from "react"
+import { type Lang } from "./translations"
 
 const translations: Record<string, Record<string, string>> = {
   en: {
@@ -969,39 +978,123 @@ const translations: Record<string, Record<string, string>> = {
   },
 }
 
-function getInitialLang(): Lang {
+const SUPPORTED_LANGS: readonly Lang[] = ["en", "es", "fr", "zh", "hi"]
+
+function isLang(x: unknown): x is Lang {
+  return typeof x === "string" && (SUPPORTED_LANGS as readonly string[]).includes(x)
+}
+
+/** Reads the user's preferred language from the client (no SSR access). */
+function clientLang(): Lang {
   if (typeof localStorage !== "undefined") {
-    const saved = localStorage.getItem("relay-lang") as Lang | null
-    if (saved && ["en", "zh", "hi", "es", "fr"].includes(saved)) return saved
+    const saved = localStorage.getItem("relay-lang")
+    if (isLang(saved)) return saved
   }
-  const browser = typeof navigator !== "undefined" ? (navigator.language || "").split("-")[0].toLowerCase() : ""
-  if (browser === "es") return "es"
-  if (browser === "fr") return "fr"
-  if (browser === "zh") return "zh"
-  if (browser === "hi") return "hi"
+  if (typeof navigator !== "undefined") {
+    const browser = (navigator.language || "").split("-")[0].toLowerCase()
+    if (isLang(browser)) return browser
+  }
   return "en"
 }
 
-export function useLanguage() {
-  const [lang, setLang] = useState<Lang>(getInitialLang)
+/**
+ * Persists the active language to localStorage AND the `relay-lang` cookie.
+ * The cookie is what `detectServerLang` reads on the next request — without
+ * it, SSR would fall back to `Accept-Language` and the user's explicit pick
+ * would flash to the navigator default on every reload.
+ */
+function persist(lang: Lang) {
+  if (typeof window === "undefined") return
+  try { localStorage.setItem("relay-lang", lang) } catch {}
+  document.cookie = `relay-lang=${lang}; path=/; max-age=31536000; samesite=lax`
+  document.documentElement.lang = lang
+}
+
+type LangState = {
+  lang: Lang
+  setLang: (l: Lang) => void
+  ready: boolean
+}
+
+const LangContext = createContext<LangState | null>(null)
+
+/**
+ * Wraps a React island so every `useLanguage()` below shares the same lang.
+ *
+ * Pass `initialLang` from the Astro page (resolved via `detectServerLang`)
+ * so SSR and the first client render agree on the language — that's what
+ * keeps hydration silent and prevents the English-then-Spanish flash.
+ *
+ * After mount, the provider reconciles with localStorage (in case the user
+ * picked a different language than what the cookie advertised) and then
+ * removes the `data-i18n-loading` attribute on <html>, which is what
+ * Layout.astro uses to keep the body invisible during the dance.
+ */
+export function LangProvider({
+  initialLang,
+  children,
+}: {
+  initialLang?: Lang
+  children: ReactNode
+}) {
+  const [lang, setLangState] = useState<Lang>(() =>
+    isLang(initialLang) ? initialLang : "en"
+  )
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem("relay-lang") as Lang | null
-    if (saved && ["en", "zh", "hi", "es", "fr"].includes(saved)) {
-      if (saved !== lang) setLang(saved)
-    } else {
-      const detected = getInitialLang()
-      if (detected !== lang) setLang(detected)
-      localStorage.setItem("relay-lang", detected)
-    }
+    const detected = clientLang()
+    if (detected !== lang) setLangState(detected)
+    persist(detected)
     setReady(true)
   }, [])
 
-  function changeLang(newLang: Lang) {
-    setLang(newLang)
-    localStorage.setItem("relay-lang", newLang)
-  }
+  // Reveal the page only AFTER ready=true AND lang has settled on its final
+  // value. Both updates above are batched in the same effect, so the next
+  // render passes through here with the final lang and we can drop the
+  // loading attribute safely.
+  useEffect(() => {
+    if (ready && typeof document !== "undefined") {
+      document.documentElement.removeAttribute("data-i18n-loading")
+    }
+  }, [ready, lang])
+
+  const setLang = useCallback((next: Lang) => {
+    setLangState(next)
+    persist(next)
+  }, [])
+
+  const value = useMemo<LangState>(
+    () => ({ lang, setLang, ready }),
+    [lang, setLang, ready]
+  )
+
+  return createElement(LangContext.Provider, { value }, children)
+}
+
+export function useLanguage() {
+  const ctx = useContext(LangContext)
+
+  // Standalone fallback for components used outside any LangProvider.
+  // Kept for safety; in practice every island gets wrapped at its root.
+  const [fallbackLang, setFallbackLang] = useState<Lang>("en")
+  const [fallbackReady, setFallbackReady] = useState(false)
+  useEffect(() => {
+    if (ctx) return
+    const detected = clientLang()
+    setFallbackLang(detected)
+    persist(detected)
+    setFallbackReady(true)
+  }, [ctx])
+
+  const lang = ctx?.lang ?? fallbackLang
+  const setLang =
+    ctx?.setLang ??
+    ((l: Lang) => {
+      setFallbackLang(l)
+      persist(l)
+    })
+  const ready = ctx?.ready ?? fallbackReady
 
   function t(key: string, vars?: Record<string, string | number>): string {
     const text = translations[lang]?.[key] ?? translations["en"]?.[key] ?? key
@@ -1009,5 +1102,5 @@ export function useLanguage() {
     return text.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`))
   }
 
-  return { lang, setLang: changeLang, t, ready }
+  return { lang, setLang, t, ready }
 }

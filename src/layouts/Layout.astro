@@ -4,6 +4,9 @@ import ToasterIsland from "@/shared/ui/ToasterIsland";
 import ShortcutsIsland from "@/shared/ui/ShortcutsIsland";
 import { getSession } from "auth-astro/server";
 import Translate from "@/i18n/translate.astro";
+import { detectServerLang } from "@/i18n/server-lang";
+
+const serverLang = detectServerLang(Astro.request);
 
 interface Props {
   title?: string;
@@ -84,7 +87,7 @@ const jsonLd =
 ---
 
 <!doctype html>
-<html lang="en" dir="ltr" data-i18n-loading>
+<html lang={serverLang} dir="ltr" data-i18n-loading>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -185,17 +188,23 @@ const jsonLd =
           });
       } catch (_) {}
     </script>
-    <script is:inline>document.documentElement.style.visibility="hidden"</script>
-    <script is:inline>
+    <script is:inline define:vars={{ serverLang }}>
     (function() {
       try {
-        if (!localStorage.getItem("relay-lang")) {
-          const lang = (navigator.language || "").split("-")[0].toLowerCase();
-          if (["en","es","fr","zh","hi"].includes(lang)) {
-            localStorage.setItem("relay-lang", lang);
-          }
+        // The server already set <html lang> (via Accept-Language / cookie).
+        // Keep localStorage and the relay-lang cookie in sync with whichever
+        // language the user actually picked (localStorage wins when present),
+        // and update <html lang> to match so React hydration agrees with what
+        // the server emitted.
+        var lang = localStorage.getItem("relay-lang");
+        if (!lang || !["en","es","fr","zh","hi"].includes(lang)) {
+          lang = serverLang || (navigator.language || "").split("-")[0].toLowerCase();
+          if (!["en","es","fr","zh","hi"].includes(lang)) lang = "en";
+          localStorage.setItem("relay-lang", lang);
         }
-        document.documentElement.style.visibility = ""
+        document.documentElement.lang = lang;
+        document.cookie = "relay-lang=" + lang + "; path=/; max-age=31536000; samesite=lax";
+
         var titles = {
           en: "relay | Free URL Shortener \u00b7 Create Short Links Instantly",
           es: "relay | Acortador de URLs Gratuito \u00b7 Crea Enlaces Cortos al Instante",
@@ -203,7 +212,6 @@ const jsonLd =
           zh: "relay | \u514d\u8d39 URL \u7f29\u77ed\u5de5\u5177 \u00b7 \u5373\u523b\u521b\u5efa\u77ed\u94fe\u63a5",
           hi: "relay | \u092e\u0941\u092b\u094d\u0924 URL \u0936\u0949\u0930\u094d\u091f\u0928\u0930 \u00b7 \u0924\u0941\u0930\u0902\u0924 \u091b\u094b\u091f\u0947 \u0932\u093f\u0902\u0915 \u092c\u0928\u093e\u090f\u0902",
         };
-        var lang = localStorage.getItem("relay-lang") || "en";
         document.title = titles[lang] || titles.en;
       } catch(e) {}
     })();
@@ -223,5 +231,15 @@ const jsonLd =
     margin: 0;
     width: 100%;
     min-height: 100%;
+  }
+
+  /*
+   * Keeps the body invisible while i18n is bootstrapping. Removed by the
+   * LangProvider after React has settled on the user's preferred language
+   * (or by translate.astro for pages that don't mount a React island).
+   * This is what prevents the brief English-then-Spanish flash on load.
+   */
+  html[data-i18n-loading] body {
+    visibility: hidden;
   }
 </style>

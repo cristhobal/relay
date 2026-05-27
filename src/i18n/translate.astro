@@ -392,14 +392,20 @@
       "auth.signin.demo": "\u0921\u0947\u092e\u094b \u092e\u094b\u0921\u0964 \u0935\u093e\u0938\u094d\u0924\u0935\u093f\u0915 \u0938\u093e\u0907\u0928-\u0907\u0928 \u0915\u0947 \u0932\u093f\u090f .env \u092e\u0947\u0902 OAuth \u0915\u094d\u0930\u0947\u0921\u0947\u0902\u0936\u093f\u092f\u0932 \u091c\u094b\u0921\u093c\u0947\u0902\u0964",
     },
   };
+  // <html lang> was set on the server via detectServerLang(). Trust the
+  // user's explicit choice in localStorage when present, otherwise stick
+  // with whatever the server resolved (Accept-Language / cookie).
+  const htmlLang = document.documentElement.lang;
   const saved = localStorage.getItem("relay-lang");
   let lang = saved;
   if (!lang || !["en","zh","hi","es","fr"].includes(lang)) {
-    const browser = (navigator.language || "").split("-")[0].toLowerCase();
-    if (["en","zh","hi","es","fr"].includes(browser)) lang = browser;
-    else lang = "en";
+    lang = ["en","zh","hi","es","fr"].includes(htmlLang) ? htmlLang : "en";
   }
   localStorage.setItem("relay-lang", lang);
+  // Keep the cookie aligned so SSR uses the right language next request.
+  document.cookie = "relay-lang=" + lang + "; path=/; max-age=31536000; samesite=lax";
+  if (document.documentElement.lang !== lang) document.documentElement.lang = lang;
+
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
     if (!key) return;
@@ -414,6 +420,11 @@
       el.textContent = text;
     }
   });
+
+  // Reveal pages that don't mount a React island (eg. /[slug], popup-callback).
+  // Pages with a React island also have LangProvider doing this — the second
+  // removeAttribute is a no-op.
+  document.documentElement.removeAttribute("data-i18n-loading");
   document.dispatchEvent(new CustomEvent("i18n-ready", { detail: { lang } }));
 })();
 </script>

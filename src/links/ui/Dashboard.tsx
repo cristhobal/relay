@@ -53,7 +53,8 @@ import {
 import { listLocalLinks } from "@/links/infrastructure/local-link-storage";
 import { shortHost, shortUrl } from "@/shared/utils/short-url";
 import { fullDate, timeAgo } from "@/shared/utils/time";
-import { useLanguage } from "@/i18n/useLanguage"
+import { useLanguage, LangProvider } from "@/i18n/useLanguage"
+import { type Lang } from "@/i18n/translations"
 import { cn } from "@/shared/utils/utils";
 
 type Tab = "links" | "configuration";
@@ -62,9 +63,25 @@ type SortMode = "newest" | "oldest" | "most-clicks" | "alpha";
 type Props = {
   session: AppSession | null;
   oauthConfigured: boolean;
+  /**
+   * Language resolved on the server (via Accept-Language / cookie). Seeds
+   * the LangProvider so SSR and the first client render agree — without
+   * it, useLanguage's initial state would diverge from the SSR'd HTML and
+   * React would re-render the whole tree, flashing English before settling
+   * on the user's language.
+   */
+  initialLang?: Lang;
 };
 
-export default function Dashboard({
+export default function Dashboard(props: Props) {
+  return (
+    <LangProvider initialLang={props.initialLang}>
+      <DashboardInner {...props} />
+    </LangProvider>
+  );
+}
+
+function DashboardInner({
   session: initialSession,
   oauthConfigured,
 }: Props) {

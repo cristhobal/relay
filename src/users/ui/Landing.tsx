@@ -8,7 +8,8 @@ import { LinkCreatedDialog } from "@/links/ui/LinkCreatedDialog";
 import { MyLinksDialog } from "@/links/ui/MyLinksDialog";
 import { UserMenu } from "@/users/ui/UserMenu";
 import { Star, Link2, ArrowRight } from "lucide-react";
-import { useLanguage } from "@/i18n/useLanguage";
+import { useLanguage, LangProvider } from "@/i18n/useLanguage";
+import { type Lang } from "@/i18n/translations";
 
 const BugReportButton = () => (
   <a
@@ -43,9 +44,23 @@ type Props = {
   oauthConfigured?: boolean;
   /** Server-resolved OAuth session (when oauthConfigured is true). */
   session?: AppSession | null;
+  /**
+   * Language resolved on the server (Accept-Language / cookie). Seeds the
+   * LangProvider so SSR and the first client render agree on language and
+   * React doesn't re-render the whole tree on hydration. See useLanguage.ts.
+   */
+  initialLang?: Lang;
 };
 
-export default function Landing({
+export default function Landing(props: Props) {
+  return (
+    <LangProvider initialLang={props.initialLang}>
+      <LandingInner {...props} />
+    </LangProvider>
+  );
+}
+
+function LandingInner({
   oauthConfigured = false,
   session: initialSession = null,
 }: Props) {

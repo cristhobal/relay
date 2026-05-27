@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro"
 import Dashboard from "@/links/ui/Dashboard.tsx"
 import { getSession } from "auth-astro/server"
 import { normaliseSession, type AppSession } from "@/auth/infrastructure/session"
+import { detectServerLang } from "@/i18n/server-lang"
 
 const oauthConfigured =
   Boolean(import.meta.env.GOOGLE_CLIENT_ID) &&
@@ -16,6 +17,8 @@ if (oauthConfigured) {
   if (!authSession) return Astro.redirect("/")
   session = normaliseSession(authSession)
 }
+
+const initialLang = detectServerLang(Astro.request)
 // In demo mode (oauthConfigured=false), Dashboard.tsx will read the
 // demo session from localStorage and redirect to "/" if absent.
 ---
@@ -29,5 +32,6 @@ if (oauthConfigured) {
     client:load
     session={session}
     oauthConfigured={oauthConfigured}
+    initialLang={initialLang}
   />
 </Layout>
