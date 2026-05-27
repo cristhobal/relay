@@ -59,6 +59,14 @@ export default function Landing({
   );
   const [displayName, setDisplayName] = React.useState<string | null>(null);
   const [anonymousCount, setAnonymousCount] = React.useState(0);
+  const [scrolled, setScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   React.useEffect(() => {
     // In demo mode, the OAuth-side session prop is null; pick up the demo
@@ -102,10 +110,12 @@ export default function Landing({
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col pt-14">
       {/* Header */}
-      <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
+      <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+          scrolled ? "bg-background/80 backdrop-blur-lg" : "bg-transparent"
+        }`}>
+        <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
           <div className="flex min-w-0 items-center gap-2.5">
             <Wordmark />
           </div>
@@ -148,7 +158,7 @@ export default function Landing({
               />
             )}
           </div>
-        </div>
+        </nav>
       </header>
 
       {/* Hero — centered */}

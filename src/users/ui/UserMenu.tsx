@@ -83,9 +83,7 @@ export function UserMenu({
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-64 p-0"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onCloseAutoFocus={(e) => e.preventDefault()}>
+      <DropdownMenuContent align="end" className="w-64 p-0">
         <div className="flex items-center gap-3 p-3">
           <Avatar className="size-10">
             {session.user.image && (

@@ -214,7 +214,7 @@ export default function Dashboard({
   const displayName = prefs.displayName || session.user.name;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col">
+    <div className="flex min-h-screen w-full flex-col pt-14">
       <DashboardHeader
         session={session}
         displayName={displayName}
@@ -223,8 +223,8 @@ export default function Dashboard({
       />
 
       {/* Tabs */}
-      <div className="border-b border-border px-4 sm:px-6 lg:px-8">
-        <nav className="-mb-px flex gap-6" role="tablist">
+      <div className="border-b border-border">
+        <nav className="mx-auto flex max-w-6xl gap-6 px-5" role="tablist">
           <TabButton active={tab === "links"} onClick={() => setTab("links")}>
             <span>{t("dashboard.tab.links")}</span>
           </TabButton>
@@ -238,27 +238,29 @@ export default function Dashboard({
       </div>
 
       <main className="flex-1">
-        {tab === "links" ? (
-          <LinksTab
-            loading={loading}
-            links={links}
-            onCreate={() => setCreateOpen(true)}
-            onCopy={handleCopy}
-            onEdit={(l) => setEditingLink(l)}
-            onDelete={(l) => setDeletingLink(l)}
-            copiedId={copiedId}
-          />
-        ) : (
-          <ConfigurationSection
-            session={session}
-            prefs={prefs}
-            onSave={(next) => {
-              savePreferences(next);
-              setPrefs(next);
-            }}
-            onSignOut={handleSignOut}
-          />
-        )}
+        <div className="mx-auto max-w-6xl">
+          {tab === "links" ? (
+            <LinksTab
+              loading={loading}
+              links={links}
+              onCreate={() => setCreateOpen(true)}
+              onCopy={handleCopy}
+              onEdit={(l) => setEditingLink(l)}
+              onDelete={(l) => setDeletingLink(l)}
+              copiedId={copiedId}
+            />
+          ) : (
+            <ConfigurationSection
+              session={session}
+              prefs={prefs}
+              onSave={(next) => {
+                savePreferences(next);
+                setPrefs(next);
+              }}
+              onSignOut={handleSignOut}
+            />
+          )}
+        </div>
       </main>
 
       <CreateLinkDialog
@@ -325,9 +327,18 @@ function DashboardHeader({
   onSignOut: () => void;
 }) {
   const { t } = useLanguage()
+  const [scrolled, setScrolled] = React.useState(false)
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
   return (
-    <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2">
+    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+        scrolled ? "bg-background/80 backdrop-blur-lg" : "bg-transparent"
+      }`}>
+      <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <Wordmark />
         </div>
@@ -340,7 +351,7 @@ function DashboardHeader({
             onSignOut={onSignOut}
           />
         </div>
-      </div>
+      </nav>
     </header>
   );
 }
