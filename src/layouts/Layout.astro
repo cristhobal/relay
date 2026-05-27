@@ -198,6 +198,15 @@ const jsonLd =
           }
         }
         document.documentElement.removeAttribute("data-i18n-loading");
+        var titles = {
+          en: "relay | Free URL Shortener \u00b7 Create Short Links Instantly",
+          es: "relay | Acortador de URLs Gratuito \u00b7 Crea Enlaces Cortos al Instante",
+          fr: "relay | Raccourcisseur d'URL Gratuit \u00b7 Cr\u00e9ez des Liens Courts Instantan\u00e9ment",
+          zh: "relay | \u514d\u8d39 URL \u7f29\u77ed\u5de5\u5177 \u00b7 \u5373\u523b\u521b\u5efa\u77ed\u94fe\u63a5",
+          hi: "relay | \u092e\u0941\u092b\u094d\u0924 URL \u0936\u0949\u0930\u094d\u091f\u0928\u0930 \u00b7 \u0924\u0941\u0930\u0902\u0924 \u091b\u094b\u091f\u0947 \u0932\u093f\u0902\u0915 \u092c\u0928\u093e\u090f\u0902",
+        };
+        var lang = localStorage.getItem("relay-lang") || "en";
+        document.title = titles[lang] || titles.en;
       } catch(e) {}
     })();
     </script>
