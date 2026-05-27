@@ -84,7 +84,7 @@ const jsonLd =
 ---
 
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-i18n-loading>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -185,6 +185,22 @@ const jsonLd =
           });
       } catch (_) {}
     </script>
+    <script is:inline>
+    (function() {
+      try {
+        if (!localStorage.getItem("relay-lang")) {
+          const lang = (navigator.language || "").split("-")[0].toLowerCase();
+          if (["en","es","fr","zh","hi"].includes(lang)) {
+            localStorage.setItem("relay-lang", lang);
+          }
+        }
+        document.documentElement.removeAttribute("data-i18n-loading");
+      } catch(e) {}
+    })();
+    </script>
+    <style is:global>
+      html[data-i18n-loading] { visibility: hidden; }
+    </style>
   </head>
   <body>
     <slot />

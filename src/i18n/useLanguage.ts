@@ -969,16 +969,31 @@ const translations: Record<string, Record<string, string>> = {
   },
 }
 
+function getInitialLang(): Lang {
+  if (typeof localStorage !== "undefined") {
+    const saved = localStorage.getItem("relay-lang") as Lang | null
+    if (saved && ["en", "zh", "hi", "es", "fr"].includes(saved)) return saved
+  }
+  const browser = typeof navigator !== "undefined" ? (navigator.language || "").split("-")[0].toLowerCase() : ""
+  if (browser === "es") return "es"
+  if (browser === "fr") return "fr"
+  if (browser === "zh") return "zh"
+  if (browser === "hi") return "hi"
+  return "en"
+}
+
 export function useLanguage() {
-  const [lang, setLang] = useState<Lang>("en")
+  const [lang, setLang] = useState<Lang>(getInitialLang)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("relay-lang") as Lang | null
     if (saved && ["en", "zh", "hi", "es", "fr"].includes(saved)) {
-      setLang(saved)
+      if (saved !== lang) setLang(saved)
     } else {
-      setLang(detectLanguage())
+      const detected = getInitialLang()
+      if (detected !== lang) setLang(detected)
+      localStorage.setItem("relay-lang", detected)
     }
     setReady(true)
   }, [])
