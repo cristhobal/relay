@@ -1067,19 +1067,19 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
           </div>
         ) : accounts.length === 0 ? (
           /* Demo mode or DB not configured — show current session provider */
-          <div className="flex items-center gap-4 px-4 py-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+          <div className="flex items-center gap-3 px-4 py-4 sm:gap-4">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
               <ShieldCheck className="size-4 text-muted-foreground" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold capitalize">
+              <p className="truncate text-sm font-semibold capitalize">
                 {session.provider}
               </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
                 {session.user.email}
               </p>
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
               {t("dashboard.config.accounts.active")}
             </span>
           </div>
@@ -1091,37 +1091,39 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
               return (
                 <li
                   key={account.provider}
-                  className="flex items-center gap-4 px-4 py-4"
+                  className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:gap-4"
                 >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                    <ShieldCheck className="size-4 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold capitalize">
-                        {account.provider}
-                      </p>
-                      {isActive && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                          {t("dashboard.config.accounts.current_session")}
-                        </span>
-                      )}
+                  <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <ShieldCheck className="size-4 text-muted-foreground" />
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("dashboard.config.accounts.linked")}{" "}
-                      {new Date(account.linkedAt).toLocaleDateString(
-                        undefined,
-                        { year: "numeric", month: "short", day: "numeric" },
-                      )}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p className="text-sm font-semibold capitalize">
+                          {account.provider}
+                        </p>
+                        {isActive && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                            {t("dashboard.config.accounts.current_session")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {t("dashboard.config.accounts.linked")}{" "}
+                        {new Date(account.linkedAt).toLocaleDateString(
+                          undefined,
+                          { year: "numeric", month: "short", day: "numeric" },
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-1 pl-11 sm:shrink-0 sm:gap-3 sm:pl-0">
                     {manageHref && (
                       <a
                         href={manageHref}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
                       >
                         {t("dashboard.config.accounts.manage")}
                         <ArrowUpRight className="size-3" />
@@ -1131,7 +1133,7 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-7 gap-1 text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                      className="h-8 gap-1 text-xs text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
                       disabled={unlinking === account.provider || isActive}
                       title={
                         isActive
