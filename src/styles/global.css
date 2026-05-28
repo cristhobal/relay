@@ -138,7 +138,8 @@
   }
   html {
     @apply font-sans;
-    overflow-y: scroll;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
   }
 
   h1 {
