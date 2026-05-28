@@ -33,8 +33,11 @@ import {
   MoreVertical,
   Unlink,
   ShieldCheck,
+  User,
+  Globe,
+  Lock,
 } from "lucide-react";
-import { type AppSession } from "@/auth/infrastructure/session";
+import { type AppSession, initials } from "@/auth/infrastructure/session";
 import {
   getDemoSession,
   clearDemoSession,
@@ -815,17 +818,19 @@ function ConfigurationSection({
   const { t } = useLanguage()
   return (
     <div className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-      <div className="mb-10 space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.config.title")}</h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {t("dashboard.config.desc")}
-        </p>
-      </div>
-      <div className="space-y-12">
-        <ProfileForm session={session} prefs={prefs} onSave={onSave} />
-        <WorkspaceForm prefs={prefs} />
-        <LinkedAccountsSection session={session} />
-        <SessionSection onSignOut={onSignOut} />
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-10 space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard.config.title")}</h1>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {t("dashboard.config.desc")}
+          </p>
+        </div>
+        <div className="space-y-10">
+          <ProfileForm session={session} prefs={prefs} onSave={onSave} />
+          <WorkspaceForm prefs={prefs} />
+          <LinkedAccountsSection session={session} />
+          <SessionSection onSignOut={onSignOut} />
+        </div>
       </div>
     </div>
   );
@@ -900,10 +905,37 @@ function ProfileForm({
 
   return (
     <FormSection
+      icon={User}
       title={t("dashboard.config.profile.title")}
       subtitle={t("dashboard.config.profile.desc")}
       onSubmit={handleSubmit}
     >
+      <div className="flex items-center gap-4 border-b border-border pb-6">
+        {session.user.image ? (
+          <img
+            src={session.user.image}
+            alt=""
+            referrerPolicy="no-referrer"
+            className="size-14 shrink-0 rounded-full object-cover ring-1 ring-border"
+          />
+        ) : (
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold text-foreground ring-1 ring-border">
+            {initials(displayName || session.user.name)}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {displayName || session.user.name}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {session.user.email}
+          </p>
+          <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
+            <ShieldCheck className="size-3" />
+            {session.provider}
+          </span>
+        </div>
+      </div>
       <FormRow
         label={t("dashboard.config.profile.displayName")}
         hint={t("dashboard.config.profile.displayNameHint", { provider: session.provider })}
@@ -920,12 +952,15 @@ function ProfileForm({
         label={t("dashboard.config.profile.email")}
         hint={t("dashboard.config.profile.emailHint", { provider: session.provider })}
       >
-        <Input
-          id="email"
-          value={session.user.email}
-          disabled
-          className="cursor-not-allowed opacity-70"
-        />
+        <div className="relative">
+          <Input
+            id="email"
+            value={session.user.email}
+            disabled
+            className="cursor-not-allowed pr-9 opacity-70"
+          />
+          <Lock className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+        </div>
       </FormRow>
       <FormFooter
         saving={saving}
@@ -941,6 +976,7 @@ function WorkspaceForm({ prefs }: { prefs: Preferences }) {
   const { t } = useLanguage()
   return (
     <FormSection
+      icon={Globe}
       title={t("dashboard.config.workspace.title")}
       subtitle={t("dashboard.config.workspace.desc")}
       onSubmit={(e) => e.preventDefault()}
@@ -949,12 +985,15 @@ function WorkspaceForm({ prefs }: { prefs: Preferences }) {
         label={t("dashboard.config.workspace.shortDomain")}
         hint={t("dashboard.config.workspace.shortDomainHint")}
       >
-        <Input
-          id="shortDomain"
-          value="withrelay.vercel.app"
-          disabled
-          className="cursor-not-allowed font-mono text-sm opacity-70"
-        />
+        <div className="relative">
+          <Input
+            id="shortDomain"
+            value="withrelay.vercel.app"
+            disabled
+            className="cursor-not-allowed pr-9 font-mono text-sm opacity-70"
+          />
+          <Lock className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/50" />
+        </div>
       </FormRow>
     </FormSection>
   );
@@ -1015,14 +1054,11 @@ function LinkedAccountsSection({ session }: { session: AppSession }) {
 
   return (
     <div>
-      <div className="mb-5">
-        <h2 className="text-base font-semibold tracking-tight">
-          {t("dashboard.config.accounts.title")}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t("dashboard.config.accounts.desc")}
-        </p>
-      </div>
+      <SectionHeader
+        icon={ShieldCheck}
+        title={t("dashboard.config.accounts.title")}
+        subtitle={t("dashboard.config.accounts.desc")}
+      />
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         {loading ? (
@@ -1133,26 +1169,59 @@ function SessionSection({ onSignOut }: { onSignOut: () => void }) {
   const { t } = useLanguage()
   return (
     <div>
-      <div className="mb-5">
-        <h2 className="text-base font-semibold tracking-tight">{t("dashboard.config.session.title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <SectionHeader
+        icon={LogOut}
+        title={t("dashboard.config.session.title")}
+        subtitle={t("dashboard.config.session.desc")}
+      />
+      <div className="flex flex-col gap-4 rounded-lg border border-destructive/20 bg-destructive/[0.03] px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p className="text-sm text-muted-foreground">
           {t("dashboard.config.session.desc")}
         </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onSignOut}
+          className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        >
+          <LogOut />
+          {t("dashboard.config.signout")}
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={onSignOut}>
-        <LogOut />
-        {t("dashboard.config.signout")}
-      </Button>
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="mb-5 flex items-start gap-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground">
+        <Icon className="size-4" />
+      </div>
+      <div className="space-y-0.5">
+        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
     </div>
   );
 }
 
 function FormSection({
+  icon,
   title,
   subtitle,
   onSubmit,
   children,
 }: {
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   subtitle?: string;
   onSubmit: (e: React.FormEvent) => void;
@@ -1160,12 +1229,7 @@ function FormSection({
 }) {
   return (
     <form onSubmit={onSubmit} noValidate>
-      <div className="mb-5">
-        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-        {subtitle && (
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-        )}
-      </div>
+      <SectionHeader icon={icon} title={title} subtitle={subtitle} />
       <div className="space-y-6 rounded-lg border border-border bg-card px-4 py-6 sm:px-6">
         {children}
       </div>
