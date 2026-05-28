@@ -21,7 +21,7 @@ No account required. Short links that work for everyone, on any device.
 
 <br />
 
-![relay preview](https://i.postimg.cc/BQjpN6Vy/relay.png)
+![relay preview](https://invault.vercel.app/sFY1ybZi.png)
 
 <br />
 
