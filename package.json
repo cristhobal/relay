@@ -1,14 +1,39 @@
 {
   "name": "relay",
+  "description": "A modern URL shortener. Fast, simple, and easy to use. Built with Node.js.",
   "type": "module",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": "Cristhobal Canales",
+  "homepage": "https://github.com/cristhobal/relay",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cristhobal/relay.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cristhobal/relay/issues/new"
+  },
+  "keywords": [
+    "astro",
+    "react",
+    "tailwindcss",
+    "relay",
+    "typescript",
+    "vercel",
+    "web",
+    "modern-ui"
+  ],
   "engines": {
     "node": ">=22.12.0"
   },
+  "packageManager": "pnpm@10",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "check": "astro check",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "astro": "astro"
   },
   "overrides": {
